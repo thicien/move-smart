@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { 
-  Bus, LayoutDashboard, Ticket, Location, 
+  Bus, LayoutDashboard, Ticket, MapPin, 
   Bell, History, User, LogOut, Menu, X, Search 
 } from 'lucide-react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';

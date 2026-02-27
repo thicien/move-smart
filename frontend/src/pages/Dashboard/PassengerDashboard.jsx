@@ -1,4 +1,4 @@
-import { Bus, MapPin, Calendar, Clock, CreditCard } from 'lucide-react';
+import { Bus, MapPin, Calendar, Clock, CreditCard, ArrowRight } from 'lucide-react';
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import axios from 'axios';
@@ -68,8 +68,8 @@ const PassengerDashboard = () => {
             <div key={booking.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col relative overflow-hidden group">
               {/* Status Ribbon */}
               <div className={`absolute top-0 right-0 px-4 py-1 text-xs font-bold text-white rounded-bl-xl shadow-sm
-                ${booking.payment_status === 'completed' ? 'bg-green-500' : 'bg-brand-yellow text-gray-800'}`}>
-                {booking.payment_status.toUpperCase()}
+                ${booking.payment_status?.toLowerCase() === 'completed' ? 'bg-green-500' : 'bg-brand-yellow text-gray-800'}`}>
+                {booking.payment_status?.toUpperCase() || 'PAID'}
               </div>
 
               <div className="flex justify-between items-start mb-6 pt-2">
