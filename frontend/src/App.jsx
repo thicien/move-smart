@@ -33,12 +33,17 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
   
   if (loading) return <div className="flex h-screen items-center justify-center font-bold">Loading...</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    console.log("ProtectedRoute: No user found, redirecting to login");
+    return <Navigate to="/login" replace />;
+  }
   
   if (allowedRoles && !allowedRoles.includes(user.role)) {
+    console.log(`ProtectedRoute: Role ${user.role} not allowed, redirecting...`);
     return <Navigate to={user.role === 'company_admin' ? '/company/dashboard' : '/dashboard'} replace />;
   }
   
+  console.log("ProtectedRoute: Access granted, rendering child component");
   return children;
 };
 

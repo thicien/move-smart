@@ -1,0 +1,2 @@
+HTTP ERR 500 http://localhost:5174/src/ErrorBoundary.jsx
+HTTP ERR 404 http://localhost:5174/favicon.ico
