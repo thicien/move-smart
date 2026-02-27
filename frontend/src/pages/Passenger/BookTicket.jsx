@@ -1,0 +1,402 @@
+import { useState } from 'react';
+import { Search, Calendar, MapPin, Users, Filter, CreditCard, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+const MOCK_RESULTS = [
+  { id: 1, company: 'Volcano Express', departure: '08:00', arrival: '11:30', price: 4000, seats: 12, rating: 4.8 },
+  { id: 2, company: 'Horizon Express', departure: '09:15', arrival: '12:45', price: 4000, seats: 5, rating: 4.5 },
+  { id: 3, company: 'Ritco', departure: '10:30', arrival: '14:00', price: 3500, seats: 30, rating: 4.2 },
+];
+
+const BookTicket = () => {
+  const navigate = useNavigate();
+  // Flow steps: 1=Search, 2=Select Seat, 3=Payment Method, 4=Success
+  const [step, setStep] = useState(1);
+  
+  // Search State
+  const [searchParams, setSearchParams] = useState({
+    from: '',
+    to: '',
+    date: '',
+    passengers: 1
+  });
+  const [results, setResults] = useState([]);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+
+  // Seat Selection State
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const mockBookedSeats = [3, 7, 8, 12, 15, 22]; // Simulated booked seats
+
+  // Payment State
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Simulate API call to GET /api/buses?route=...
+    setResults(MOCK_RESULTS);
+  };
+
+  const handleSelectSchedule = (schedule) => {
+    setSelectedSchedule(schedule);
+    setStep(2); // Move to seat selection
+  };
+
+  const toggleSeat = (seatId) => {
+    if (mockBookedSeats.includes(seatId)) return;
+    
+    if (selectedSeats.includes(seatId)) {
+      setSelectedSeats(selectedSeats.filter(s => s !== seatId));
+    } else {
+      if (selectedSeats.length < searchParams.passengers) {
+        setSelectedSeats([...selectedSeats, seatId]);
+      } else {
+        alert(`You only requested ${searchParams.passengers} passenger(s).`);
+      }
+    }
+  };
+
+  const proceedToPayment = () => {
+    if (selectedSeats.length < searchParams.passengers) {
+      alert('Please select seats for all passengers.');
+      return;
+    }
+    setStep(3);
+  };
+
+  const handlePayment = () => {
+    if (!paymentMethod) return alert('Select a payment method.');
+    setIsProcessing(true);
+    // Simulate payment API trigger
+    setTimeout(() => {
+      setIsProcessing(false);
+      setStep(4);
+    }, 2000);
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto pb-10">
+      {/* Progress Indicator */}
+      <div className="flex items-center justify-between mb-8 px-4 relative">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-200 -z-10 rounded"></div>
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-brand-orange -z-10 rounded transition-all duration-500" 
+             style={{ width: `${((step - 1) / 3) * 100}%` }}></div>
+        
+        {['Search', 'Seat Selection', 'Payment', 'Ticket'].map((label, idx) => (
+          <div key={label} className="flex flex-col items-center">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-md transition-colors
+              ${step > idx + 1 ? 'bg-green-500 text-white' : step === idx + 1 ? 'bg-brand-orange text-white ring-4 ring-orange-100' : 'bg-white text-gray-400 border border-gray-200'}
+            `}>
+              {step > idx + 1 ? <CheckCircle2 className="w-6 h-6" /> : idx + 1}
+            </div>
+            <span className={`text-xs mt-2 font-bold ${step >= idx + 1 ? 'text-brand-dark' : 'text-gray-400'}`}>
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* --- STEP 1: SEARCH & FILTER --- */}
+      {step === 1 && (
+        <div className="space-y-8">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h2 className="text-xl font-bold text-brand-dark mb-4">Find Your Journey</h2>
+            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input 
+                  type="text" required placeholder="From (e.g. Kigali)" 
+                  value={searchParams.from} onChange={e => setSearchParams({...searchParams, from: e.target.value})}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue/30 focus:bg-white outline-none"
+                />
+              </div>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input 
+                  type="text" required placeholder="To (e.g. Rubavu)" 
+                  value={searchParams.to} onChange={e => setSearchParams({...searchParams, to: e.target.value})}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue/30 focus:bg-white outline-none"
+                />
+              </div>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input 
+                  type="date" required 
+                  value={searchParams.date} onChange={e => setSearchParams({...searchParams, date: e.target.value})}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue/30 focus:bg-white outline-none"
+                />
+              </div>
+              <div className="relative flex">
+                <div className="relative flex-1">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input 
+                    type="number" min="1" max="5" required
+                    value={searchParams.passengers} onChange={e => setSearchParams({...searchParams, passengers: parseInt(e.target.value)})}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-l-xl focus:ring-2 focus:ring-brand-blue/30 focus:bg-white outline-none"
+                  />
+                </div>
+                <button type="submit" className="bg-brand-orange hover:bg-orange-600 text-white font-bold px-6 rounded-r-xl transition-colors">
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {results.length > 0 && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-gray-700">Available Buses ({results.length})</h3>
+                <button className="flex items-center gap-2 text-sm text-brand-blue font-semibold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                   <Filter className="w-4 h-4" /> Filter
+                </button>
+              </div>
+              
+              {results.map((bus) => (
+                <div key={bus.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-md transition-shadow">
+                  {/* Company & Rating */}
+                  <div className="flex flex-col md:w-1/4">
+                    <span className="font-black text-lg text-brand-dark">{bus.company}</span>
+                    <span className="text-sm font-semibold text-yellow-500 bg-yellow-50 px-2 py-0.5 rounded w-max mt-1">★ {bus.rating} Rating</span>
+                  </div>
+
+                  {/* Timeline */}
+                  <div className="flex items-center justify-between flex-1 w-full relative before:content-[''] before:absolute before:h-0.5 before:bg-gray-200 before:w-full before:top-1/2 before:-translate-y-1/2 before:z-0">
+                    <div className="bg-white z-10 pr-4 text-center">
+                      <span className="block font-black text-xl text-brand-dark">{bus.departure}</span>
+                      <span className="text-xs text-gray-500 font-bold uppercase">{searchParams.from || 'Origin'}</span>
+                    </div>
+                    
+                    <div className="bg-white z-10 px-2 text-brand-orange">
+                      <Bus className="w-6 h-6" />
+                    </div>
+
+                    <div className="bg-white z-10 pl-4 text-center">
+                      <span className="block font-black text-xl text-brand-dark">{bus.arrival}</span>
+                      <span className="text-xs text-gray-500 font-bold uppercase">{searchParams.to || 'Dest'}</span>
+                    </div>
+                  </div>
+
+                  {/* Price & Action */}
+                  <div className="flex flex-col items-center md:items-end md:w-1/4 gap-2 w-full">
+                    <div className="text-center md:text-right">
+                      <span className="block text-2xl font-black text-brand-blue">RWF {bus.price}</span>
+                      <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">{bus.seats} Seats left</span>
+                    </div>
+                    <button 
+                      onClick={() => handleSelectSchedule(bus)}
+                      className="w-full md:w-auto bg-brand-dark hover:bg-gray-800 text-white font-bold px-6 py-2.5 rounded-xl transition-colors"
+                    >
+                      Select
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* --- STEP 2: SEAT SELECTION --- */}
+      {step === 2 && (
+        <div className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-gray-100 animate-fade-in flex flex-col md:flex-row gap-10">
+          
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-brand-dark mb-2">Select Your Seats</h2>
+            <p className="text-gray-500 mb-8">Click on the available seats to select them. You need to select {searchParams.passengers} seat(s).</p>
+            
+            <div className="flex items-center gap-6 mb-8 text-sm font-bold">
+               <div className="flex items-center gap-2"><div className="w-5 h-5 bg-white border-2 border-green-500 rounded text-center leading-4 text-green-500">✓</div> Available</div>
+               <div className="flex items-center gap-2"><div className="w-5 h-5 bg-brand-orange border-2 border-brand-orange rounded"></div> Selected</div>
+               <div className="flex items-center gap-2"><div className="w-5 h-5 bg-gray-200 border-2 border-gray-300 rounded text-center leading-4 text-gray-400">×</div> Booked</div>
+            </div>
+
+            {/* Bus Layout Mock */}
+            <div className="bg-gray-50 border border-gray-200 p-8 rounded-[3rem] w-max mx-auto shadow-inner relative">
+               {/* Driver Area */}
+               <div className="w-full flex justify-end mb-8 border-b-2 border-gray-300 pb-4">
+                  <div className="w-10 h-10 bg-gray-300 rounded-xl flex items-center justify-center text-gray-500 text-xs font-bold">Driver</div>
+               </div>
+
+               {/* Seats Grid */}
+               <div className="grid grid-cols-4 gap-x-8 gap-y-4">
+                  {Array.from({ length: 30 }).map((_, i) => {
+                    const seatNum = i + 1;
+                    const isBooked = mockBookedSeats.includes(seatNum);
+                    const isSelected = selectedSeats.includes(seatNum);
+                    
+                    return (
+                      <button
+                        key={seatNum}
+                        onClick={() => toggleSeat(seatNum)}
+                        disabled={isBooked}
+                        className={`w-12 h-12 rounded-t-xl rounded-b-sm font-bold text-sm transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center
+                          ${isBooked ? 'bg-gray-200 text-gray-400 border-b-4 border-gray-300 cursor-not-allowed' : 
+                            isSelected ? 'bg-brand-orange text-white border-b-4 border-orange-700 shadow-md shadow-orange-500/30' : 
+                            'bg-white text-green-600 border-2 border-green-500 border-b-4 hover:bg-green-50 cursor-pointer'}
+                        `}
+                      >
+                        {seatNum}
+                      </button>
+                    )
+                  })}
+               </div>
+            </div>
+          </div>
+
+          <div className="w-full md:w-1/3 bg-gray-50 p-6 rounded-2xl border border-gray-200 self-start sticky top-6">
+            <h3 className="font-bold text-xl text-brand-dark mb-4">Summary</h3>
+            <div className="space-y-3 mb-6">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Route</span>
+                <strong className="text-brand-dark">{searchParams.from} to {searchParams.to}</strong>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Company</span>
+                <strong className="text-brand-dark">{selectedSchedule.company}</strong>
+              </div>
+              <div className="flex justify-between text-sm border-b border-gray-200 pb-3">
+                <span className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Departure</span>
+                <strong className="text-brand-dark">{searchParams.date} at {selectedSchedule.departure}</strong>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Seats selected</span>
+                <strong className="text-brand-orange text-lg">
+                  {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}
+                </strong>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center bg-brand-blue text-white p-4 rounded-xl mb-6 shadow-md">
+              <span className="font-bold">Total Price:</span>
+              <span className="font-black text-xl">RWF {selectedSeats.length * selectedSchedule.price}</span>
+            </div>
+
+            <button 
+              onClick={proceedToPayment}
+              disabled={selectedSeats.length < searchParams.passengers}
+              className="w-full bg-brand-orange hover:bg-orange-600 disabled:bg-gray-300 text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 group shadow-lg"
+            >
+              Continue to Payment <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            
+            <button 
+              onClick={() => setStep(1)}
+              className="w-full mt-3 bg-white hover:bg-gray-100 text-gray-600 font-bold py-2.5 rounded-xl transition-colors border border-gray-200"
+            >
+              Back to Search
+            </button>
+          </div>
+
+        </div>
+      )}
+
+      {/* --- STEP 3: PAYMENT INTEGRATION --- */}
+      {step === 3 && (
+        <div className="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-100 max-w-3xl mx-auto animate-fade-in relative overflow-hidden">
+          <h2 className="text-2xl font-bold text-brand-dark mb-2 text-center">Complete Your Payment</h2>
+          <p className="text-gray-500 text-center mb-10">Select a payment method to securely purchase your ticket.</p>
+
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex-1 space-y-4">
+              {['Tap&Go QR', 'MTN Mobile Money', 'Airtel Money'].map((method) => (
+                <label 
+                  key={method}
+                  className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all
+                    ${paymentMethod === method ? 'border-brand-orange bg-orange-50 scale-[1.02] shadow-md' : 'border-gray-200 hover:border-brand-blue'}
+                  `}
+                >
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="radio" 
+                      name="payment_method" 
+                      value={method}
+                      checked={paymentMethod === method}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-5 h-5 text-brand-orange focus:ring-brand-orange"
+                    />
+                    <span className="font-bold text-brand-dark">{method}</span>
+                  </div>
+                  <CreditCard className={`w-6 h-6 ${paymentMethod === method ? 'text-brand-orange' : 'text-gray-400'}`} />
+                </label>
+              ))}
+            </div>
+
+            <div className="w-full md:w-2/5 flex flex-col items-center justify-center p-6 bg-brand-light rounded-2xl border border-gray-200">
+              <span className="text-sm font-bold text-gray-500 uppercase tracking-wilder mb-2">Total Amount due</span>
+              <span className="text-3xl font-black text-brand-blue mb-8">RWF {selectedSeats.length * selectedSchedule.price}</span>
+              
+              <button
+                onClick={handlePayment}
+                disabled={!paymentMethod || isProcessing}
+                className="w-full bg-brand-orange hover:bg-orange-600 disabled:bg-gray-400 text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-orange-500/50 flex items-center justify-center"
+              >
+                {isProcessing ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Processing...
+                  </div>
+                ) : (
+                  `Pay RWF ${selectedSeats.length * selectedSchedule.price}`
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- STEP 4: TICKET GENERATION --- */}
+      {step === 4 && (
+        <div className="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-green-100 max-w-2xl mx-auto text-center animate-fade-in">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-green-500" />
+          </div>
+          <h2 className="text-3xl font-black text-brand-dark mb-2">Payment Successful!</h2>
+          <p className="text-gray-500 mb-8">Your ticket has been generated and sent to your phone/email.</p>
+
+          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-6 text-left relative overflow-hidden mb-8">
+            <div className="absolute top-0 right-0 bg-brand-blue text-white font-black px-4 py-1 rounded-bl-xl text-sm">
+              TKT-A8F9B2
+            </div>
+            
+            <h3 className="font-black text-xl text-brand-orange mb-4">{selectedSchedule.company}</h3>
+            
+            <div className="grid grid-cols-2 gap-y-4 text-sm">
+              <div>
+                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Route</span>
+                <strong className="text-gray-800 text-base">{searchParams.from} ➔ {searchParams.to}</strong>
+              </div>
+              <div>
+                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Date & Time</span>
+                <strong className="text-gray-800 text-base">{searchParams.date} at {selectedSchedule.departure}</strong>
+              </div>
+              <div>
+                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Passenger</span>
+                <strong className="text-gray-800 text-base">John Doe</strong>
+              </div>
+              <div>
+                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Seat(s)</span>
+                <strong className="text-brand-orange text-lg font-black">{selectedSeats.join(', ')}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <button className="bg-brand-blue hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-colors">
+              Download PDF Ticket
+            </button>
+            <button 
+              onClick={() => navigate('/tracking')}
+              className="bg-brand-light hover:bg-gray-200 text-brand-blue font-bold py-3 px-6 rounded-xl border border-blue-200 transition-colors"
+            >
+              Track Bus Live
+            </button>
+          </div>
+
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+export default BookTicket;
