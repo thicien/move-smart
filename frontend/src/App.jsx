@@ -7,12 +7,26 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import TrackBus from './pages/Tracking/TrackBus';
 import PassengerLayout from './layouts/PassengerLayout';
+// Passenger Views
 import { 
   DashboardHome, BookTicket, MyTickets, 
   LiveTracking, Notifications, BookingHistory, ProfileSettings 
 } from './pages/Passenger';
-// Replace this with the fully-fleshed actual dashboard soon
 import PassengerDashboard from './pages/Dashboard/PassengerDashboard';
+
+// Company Views
+import {
+  CompanyLayout,
+  CompanyDashboardHome,
+  ManageBuses,
+  RoutesSchedules,
+  BookingsTickets,
+  FleetTracking,
+  RevenueReports,
+  DriversManagement,
+  CompanyNotifications,
+  CompanySettings
+} from './pages/Company';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -44,7 +58,7 @@ function App() {
         <Route path="/register" element={<StandardLayout><Register /></StandardLayout>} />
         <Route path="/track" element={<StandardLayout><TrackBus /></StandardLayout>} />
 
-        {/* Protected Passenger Dashboard Routes (uses PassengerLayout) */}
+        {/* Protected Passenger Dashboard Routes */}
         <Route 
           element={
             <ProtectedRoute>
@@ -59,6 +73,25 @@ function App() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/history" element={<BookingHistory />} />
           <Route path="/profile" element={<ProfileSettings />} />
+        </Route>
+
+        {/* Protected Company ERP Routes */}
+        <Route 
+          element={
+            <ProtectedRoute>
+              <CompanyLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/company/dashboard" element={<CompanyDashboardHome />} />
+          <Route path="/company/buses" element={<ManageBuses />} />
+          <Route path="/company/routes" element={<RoutesSchedules />} />
+          <Route path="/company/bookings" element={<BookingsTickets />} />
+          <Route path="/company/tracking" element={<FleetTracking />} />
+          <Route path="/company/reports" element={<RevenueReports />} />
+          <Route path="/company/drivers" element={<DriversManagement />} />
+          <Route path="/company/notifications" element={<CompanyNotifications />} />
+          <Route path="/company/settings" element={<CompanySettings />} />
         </Route>
       </Routes>
     </Router>

@@ -20,7 +20,7 @@ const PassengerLayout = () => {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Book Ticket', icon: Ticket, path: '/book' },
     { name: 'My Tickets', icon: Ticket, path: '/tickets' },
-    { name: 'Live Tracking', icon: Location, path: '/tracking' },
+    { name: 'Live Tracking', icon: MapPin, path: '/tracking' },
     { name: 'Notifications', icon: Bell, path: '/notifications' },
     { name: 'Booking History', icon: History, path: '/history' },
     { name: 'Profile Settings', icon: User, path: '/profile' },
