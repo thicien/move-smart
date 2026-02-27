@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react';
-import { Bus, Mail, Lock, User, Phone, ArrowRight } from 'lucide-react';
+import { Bus, Mail, Lock, User, Phone, ArrowRight, Building, Briefcase } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
@@ -9,7 +9,10 @@ const Register = () => {
     email: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'passenger',
+    companyName: '',
+    registrationNumber: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +38,11 @@ const Register = () => {
       email: formData.email,
       password: formData.password,
       phone: formData.phone,
-      role: 'passenger'
+      role: formData.role,
+      ...(formData.role === 'company_admin' && {
+        companyName: formData.companyName,
+        registrationNumber: formData.registrationNumber
+      })
     });
 
     if (result.success) {
@@ -118,6 +125,63 @@ const Register = () => {
                 />
               </div>
             </div>
+
+            {/* Account Role */}
+            <div className="space-y-1 md:col-span-2">
+              <label className="text-sm font-semibold text-gray-700">Account Type</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <select 
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue focus:bg-white outline-none transition-all appearance-none cursor-pointer text-gray-700"
+                >
+                  <option value="passenger">Passenger Account</option>
+                  <option value="company_admin">Company Administrator</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Company Specific Fields */}
+            {formData.role === 'company_admin' && (
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in mt-2 border-t border-gray-100 pt-5">
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Company Name</label>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input 
+                      type="text" 
+                      name="companyName"
+                      value={formData.companyName}
+                      onChange={handleChange}
+                      placeholder="e.g. MoveSmart Ltd"
+                      className="w-full pl-10 pr-4 py-3 bg-orange-50/30 border border-orange-100 rounded-xl focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange focus:bg-white outline-none transition-all"
+                      required={formData.role === 'company_admin'}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">Registration Number (TIN)</label>
+                  <div className="relative">
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input 
+                      type="text" 
+                      name="registrationNumber"
+                      value={formData.registrationNumber}
+                      onChange={handleChange}
+                      placeholder="e.g. 108923485"
+                      className="w-full pl-10 pr-4 py-3 bg-orange-50/30 border border-orange-100 rounded-xl focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange focus:bg-white outline-none transition-all"
+                      required={formData.role === 'company_admin'}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

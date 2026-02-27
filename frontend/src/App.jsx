@@ -29,11 +29,15 @@ import {
 } from './pages/Company';
 
 // Protected Route Wrapper
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
   
   if (loading) return <div className="flex h-screen items-center justify-center font-bold">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
+  
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to={user.role === 'company_admin' ? '/company/dashboard' : '/dashboard'} replace />;
+  }
   
   return children;
 };
@@ -78,7 +82,7 @@ function App() {
         {/* Protected Company ERP Routes */}
         <Route 
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['company_admin']}>
               <CompanyLayout />
             </ProtectedRoute>
           }
