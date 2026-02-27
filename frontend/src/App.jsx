@@ -28,22 +28,33 @@ import {
   CompanySettings
 } from './pages/Company';
 
+// Admin Views
+import {
+  AdminLayout,
+  DashboardOverview as AdminDashboardOverview,
+  FleetMonitoring,
+  CompaniesManagement,
+  RouteMonitoring,
+  RevenueControl,
+  ComplianceViolations,
+  AnalyticsReports,
+  SystemSettings,
+  AuditLogs
+} from './pages/Admin';
+
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
   
   if (loading) return <div className="flex h-screen items-center justify-center font-bold">Loading...</div>;
-  if (!user) {
-    console.log("ProtectedRoute: No user found, redirecting to login");
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
   
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    console.log(`ProtectedRoute: Role ${user.role} not allowed, redirecting...`);
-    return <Navigate to={user.role === 'company_admin' ? '/company/dashboard' : '/dashboard'} replace />;
+    if (user.role === 'company_admin') return <Navigate to="/company/dashboard" replace />;
+    if (user.role === 'system_admin') return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   
-  console.log("ProtectedRoute: Access granted, rendering child component");
   return children;
 };
 
@@ -102,6 +113,28 @@ function App() {
           <Route path="/company/notifications" element={<CompanyNotifications />} />
           <Route path="/company/settings" element={<CompanySettings />} />
         </Route>
+
+        {/* Protected Government Admin Routes */}
+        <Route 
+          element={
+            <ProtectedRoute allowedRoles={['system_admin']}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/admin/dashboard" element={<AdminDashboardOverview />} />
+          <Route path="/admin/fleet" element={<FleetMonitoring />} />
+          <Route path="/admin/companies" element={<CompaniesManagement />} />
+          <Route path="/admin/routes" element={<RouteMonitoring />} />
+          <Route path="/admin/revenue" element={<RevenueControl />} />
+          <Route path="/admin/compliance" element={<ComplianceViolations />} />
+          <Route path="/admin/reports" element={<AnalyticsReports />} />
+          <Route path="/admin/settings" element={<SystemSettings />} />
+          <Route path="/admin/audit" element={<AuditLogs />} />
+        </Route>
+        
+        {/* Fallback Catch-All Route */}
+        <Route path="*" element={<div className="flex h-screen items-center justify-center font-bold text-3xl text-red-600 bg-red-50">APPLICATION ROUTE NOT FOUND (404)</div>} />
       </Routes>
     </Router>
   );
