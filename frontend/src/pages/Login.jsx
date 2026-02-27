@@ -1,15 +1,31 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Bus, Mail, Lock, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Simulate login API call here
-    console.log('Login attempt:', email, password);
+    setError('');
+    setLoading(true);
+    
+    const result = await login(email, password);
+    
+    if (result.success) {
+      navigate('/');
+    } else {
+      setError(result.message);
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -23,6 +39,12 @@ const Login = () => {
           <h2 className="text-2xl font-bold text-brand-dark">Welcome Back</h2>
           <p className="text-sm text-gray-500 mt-1">Sign in to your MoveSmart account</p>
         </div>
+
+        {error && (
+          <div className="mb-4 bg-red-50 text-brand-red p-3 rounded-lg text-sm border border-red-100 flex items-center gap-2">
+            <span className="font-semibold">Error:</span> {error}
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-6">
           
