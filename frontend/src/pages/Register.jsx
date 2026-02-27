@@ -145,44 +145,44 @@ const Register = () => {
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Company Specific Fields */}
-            {formData.role === 'company_admin' && (
-              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in mt-2 border-t border-gray-100 pt-5">
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-gray-700">Company Name</label>
-                  <div className="relative">
-                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input 
-                      type="text" 
-                      name="companyName"
-                      value={formData.companyName}
-                      onChange={handleChange}
-                      placeholder="e.g. MoveSmart Ltd"
-                      className="w-full pl-10 pr-4 py-3 bg-orange-50/30 border border-orange-100 rounded-xl focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange focus:bg-white outline-none transition-all"
-                      required={formData.role === 'company_admin'}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-gray-700">Registration Number (TIN)</label>
-                  <div className="relative">
-                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input 
-                      type="text" 
-                      name="registrationNumber"
-                      value={formData.registrationNumber}
-                      onChange={handleChange}
-                      placeholder="e.g. 108923485"
-                      className="w-full pl-10 pr-4 py-3 bg-orange-50/30 border border-orange-100 rounded-xl focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange focus:bg-white outline-none transition-all"
-                      required={formData.role === 'company_admin'}
-                    />
-                  </div>
+          {/* Company Specific Fields */}
+          {formData.role === 'company_admin' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in mt-2 border-t border-gray-100 pt-5">
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-gray-700">Company Name</label>
+                <div className="relative">
+                  <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input 
+                    type="text" 
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    placeholder="e.g. MoveSmart Ltd"
+                    className="w-full pl-10 pr-4 py-3 bg-orange-50/30 border border-orange-100 rounded-xl focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange focus:bg-white outline-none transition-all"
+                    required={formData.role === 'company_admin'}
+                  />
                 </div>
               </div>
-            )}
-          </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-gray-700">Registration Number (TIN)</label>
+                <div className="relative">
+                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input 
+                    type="text" 
+                    name="registrationNumber"
+                    value={formData.registrationNumber}
+                    onChange={handleChange}
+                    placeholder="e.g. 108923485"
+                    className="w-full pl-10 pr-4 py-3 bg-orange-50/30 border border-orange-100 rounded-xl focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange focus:bg-white outline-none transition-all"
+                    required={formData.role === 'company_admin'}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Password */}

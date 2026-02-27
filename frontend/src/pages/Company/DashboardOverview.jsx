@@ -1,6 +1,6 @@
 import { 
   Bus, Users, TrendingUp, DollarSign, Map, Route as RouteIcon, 
-  AlertTriangle, ShieldCheck 
+  AlertTriangle, ShieldCheck, MapPin
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
