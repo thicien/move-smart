@@ -22,6 +22,8 @@ const Login = () => {
     if (result.success) {
       if (result.user.role === 'company_admin') {
         navigate('/company/dashboard');
+      } else if (result.user.role === 'system_admin' || result.user.role === 'government') {
+        navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');
       }

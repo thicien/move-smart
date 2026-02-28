@@ -52,7 +52,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     if (user.role === 'company_admin') return <Navigate to="/company/dashboard" replace />;
-    if (user.role === 'system_admin') return <Navigate to="/admin/dashboard" replace />;
+    if (user.role === 'system_admin' || user.role === 'government') return <Navigate to="/admin/dashboard" replace />;
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -82,7 +82,7 @@ function App() {
         {/* Protected Passenger Dashboard Routes */}
         <Route 
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['passenger']}>
               <PassengerLayout />
             </ProtectedRoute>
           }
@@ -118,7 +118,7 @@ function App() {
         {/* Protected Government Admin Routes (Professional Version) */}
         <Route 
           element={
-            <ProtectedRoute allowedRoles={['system_admin']}>
+            <ProtectedRoute allowedRoles={['system_admin', 'government']}>
               <AdminLayout />
             </ProtectedRoute>
           }
