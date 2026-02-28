@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import { 
   Building2, LayoutDashboard, Route as RouteIcon, ShieldAlert,
-  Settings, LogOut, Menu, X, Search, Bell, Map, PieChart, Landmark, FileText, ClipboardList
+  Settings, LogOut, Menu, X, Search, Bell, Map, PieChart, Landmark, FileText, DollarSign
 } from 'lucide-react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -18,14 +18,15 @@ const AdminLayout = () => {
 
   const navLinks = [
     { name: 'National Overview', icon: LayoutDashboard, path: '/admin/dashboard' },
-    { name: 'Live Fleet Monitoring', icon: Map, path: '/admin/fleet' },
-    { name: 'Companies Management', icon: Building2, path: '/admin/companies' },
-    { name: 'Route Monitoring', icon: RouteIcon, path: '/admin/routes' },
-    { name: 'Revenue & Tax Control', icon: Landmark, path: '/admin/revenue' },
-    { name: 'Compliance & Violations', icon: ShieldAlert, path: '/admin/compliance' },
-    { name: 'Analytics & Reports', icon: PieChart, path: '/admin/reports' },
+    { name: 'Route Management', icon: RouteIcon, path: '/admin/routes' },
+    { name: 'Fare & Pricing Control', icon: DollarSign, path: '/admin/fares' },
+    { name: 'Revenue & Tax Monitoring', icon: Landmark, path: '/admin/revenue' },
+    { name: 'Company Performance', icon: Building2, path: '/admin/companies' },
+    { name: 'Live Bus Tracking', icon: Map, path: '/admin/tracking' },
+    { name: 'Delay & Violation', icon: ShieldAlert, path: '/admin/violations' },
+    { name: 'Transport Analytics', icon: PieChart, path: '/admin/analytics' },
+    { name: 'Reports & Exports', icon: FileText, path: '/admin/reports' },
     { name: 'System Settings', icon: Settings, path: '/admin/settings' },
-    { name: 'Audit Logs', icon: ClipboardList, path: '/admin/audit' },
   ];
 
   return (
@@ -79,7 +80,9 @@ const AdminLayout = () => {
           <p className="px-3 text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Core Systems</p>
           {navLinks.map((link, index) => (
             <div key={link.name}>
-              {index === 7 && <p className="px-3 text-xs font-bold text-slate-500 uppercase tracking-widest mt-6 mb-3">Administration</p>}
+              {index === 1 && <p className="px-3 text-xs font-bold text-slate-500 uppercase tracking-widest mt-6 mb-3">Core Authority</p>}
+              {index === 5 && <p className="px-3 text-xs font-bold text-slate-500 uppercase tracking-widest mt-6 mb-3">Tracking & Compliance</p>}
+              {index === 7 && <p className="px-3 text-xs font-bold text-slate-500 uppercase tracking-widest mt-6 mb-3">Data & Administration</p>}
               <NavLink
                 to={link.path}
                 className={({ isActive }) => `

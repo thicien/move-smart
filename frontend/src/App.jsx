@@ -28,18 +28,19 @@ import {
   CompanySettings
 } from './pages/Company';
 
-// Admin Views
+// Admin Views (Professional Version)
 import {
   AdminLayout,
   DashboardOverview as AdminDashboardOverview,
-  FleetMonitoring,
-  CompaniesManagement,
-  RouteMonitoring,
-  RevenueControl,
-  ComplianceViolations,
-  AnalyticsReports,
-  SystemSettings,
-  AuditLogs
+  RouteManagement,
+  FarePricing,
+  RevenueMonitoring,
+  CompanyPerformance,
+  LiveBusTracking,
+  DelayViolation,
+  TransportAnalytics,
+  ReportsExports,
+  SystemSettings
 } from './pages/Admin';
 
 // Protected Route Wrapper
@@ -114,7 +115,7 @@ function App() {
           <Route path="/company/settings" element={<CompanySettings />} />
         </Route>
 
-        {/* Protected Government Admin Routes */}
+        {/* Protected Government Admin Routes (Professional Version) */}
         <Route 
           element={
             <ProtectedRoute allowedRoles={['system_admin']}>
@@ -123,14 +124,15 @@ function App() {
           }
         >
           <Route path="/admin/dashboard" element={<AdminDashboardOverview />} />
-          <Route path="/admin/fleet" element={<FleetMonitoring />} />
-          <Route path="/admin/companies" element={<CompaniesManagement />} />
-          <Route path="/admin/routes" element={<RouteMonitoring />} />
-          <Route path="/admin/revenue" element={<RevenueControl />} />
-          <Route path="/admin/compliance" element={<ComplianceViolations />} />
-          <Route path="/admin/reports" element={<AnalyticsReports />} />
+          <Route path="/admin/routes" element={<RouteManagement />} />
+          <Route path="/admin/fares" element={<FarePricing />} />
+          <Route path="/admin/revenue" element={<RevenueMonitoring />} />
+          <Route path="/admin/companies" element={<CompanyPerformance />} />
+          <Route path="/admin/tracking" element={<LiveBusTracking />} />
+          <Route path="/admin/violations" element={<DelayViolation />} />
+          <Route path="/admin/analytics" element={<TransportAnalytics />} />
+          <Route path="/admin/reports" element={<ReportsExports />} />
           <Route path="/admin/settings" element={<SystemSettings />} />
-          <Route path="/admin/audit" element={<AuditLogs />} />
         </Route>
         
         {/* Fallback Catch-All Route */}
