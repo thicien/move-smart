@@ -1,15 +1,19 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { User, Company } = require('../models');
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, phone } = req.body;
+    const { name, email, password, role, phone, companyName, registrationNumber } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
+    }
+
+    if (role === 'company_admin' && (!companyName || !registrationNumber)) {
+      return res.status(400).json({ message: 'Company name and registration number are required for company accounts' });
     }
 
     // Hash password
@@ -24,6 +28,14 @@ exports.register = async (req, res) => {
       role: role || 'passenger',
       phone
     });
+
+    if (role === 'company_admin') {
+      await Company.create({
+        name: companyName,
+        registration_number: registrationNumber,
+        admin_id: newUser.id
+      });
+    }
 
     res.status(201).json({
       message: 'User registered successfully',
