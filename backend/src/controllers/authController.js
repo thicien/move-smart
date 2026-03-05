@@ -16,15 +16,11 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Company name and registration number are required for company accounts' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create user
+    // Use plaintext password (as requested)
     const newUser = await User.create({
       name,
       email,
-      password: hashedPassword,
+      password: password,
       role: role || 'passenger',
       phone
     });
@@ -63,8 +59,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Check password (plaintext comparison as requested)
+    const isMatch = password === user.password;
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
