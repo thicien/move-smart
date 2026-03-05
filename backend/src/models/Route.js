@@ -9,7 +9,20 @@ const Route = sequelize.define('Route', {
   },
   company_id: {
     type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  code: {
+    type: DataTypes.STRING,
     allowNull: false,
+    unique: true
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  status: {
+    type: DataTypes.ENUM('Active', 'Suspended'),
+    defaultValue: 'Active',
   },
   origin: {
     type: DataTypes.STRING,

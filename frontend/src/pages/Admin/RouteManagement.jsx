@@ -1,21 +1,61 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   MapPin, Plus, Search, Edit2, Trash2, CheckCircle2, XCircle, Route as RouteIcon,
-  Map, MoreVertical, ShieldAlert
+  Map, MoreVertical, ShieldAlert, AlertTriangle
 } from 'lucide-react';
 
-// Mock DB routes
-const MOCK_ROUTES = [
-  { id: 'RT-001', code: 'KGL-MSZ', name: 'Kigali → Musanze', origin: 'Kigali (Nyabugogo)', destination: 'Musanze (City Center)', distance: '110 km', time: '2h 15m', status: 'Active', companies: 4 },
-  { id: 'RT-002', code: 'KGL-HUY', name: 'Kigali → Huye', origin: 'Kigali (Nyabugogo)', destination: 'Huye (Bus Park)', distance: '130 km', time: '3h 0m', status: 'Active', companies: 3 },
-  { id: 'RT-003', code: 'KGL-RBV', name: 'Kigali → Rubavu', origin: 'Kigali (Nyabugogo)', destination: 'Rubavu (Border)', distance: '160 km', time: '3h 45m', status: 'Active', companies: 5 },
-  { id: 'RT-004', code: 'MSZ-RBV', name: 'Musanze → Rubavu', origin: 'Musanze', destination: 'Rubavu', distance: '65 km', time: '1h 30m', status: 'Suspended', companies: 0 },
-  { id: 'RT-005', code: 'KGL-RMG', name: 'Kigali → Rwamagana', origin: 'Kigali (Remera)', destination: 'Rwamagana', distance: '60 km', time: '1h 10m', status: 'Active', companies: 2 },
-];
+import axios from 'axios';
 
 const RouteManagement = () => {
+  const [routes, setRoutes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    code: '',
+    origin: '',
+    destination: '',
+    name: '',
+    distance: '',
+    estimated_duration: '',
+    status: 'Active'
+  });
+
+  const fetchRoutes = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get('http://127.0.0.1:5000/api/admin/routes');
+      setRoutes(res.data);
+    } catch (error) {
+      console.error('Failed to fetch routes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateRoute = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('http://127.0.0.1:5000/api/admin/routes', formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchRoutes();
+      setIsModalOpen(false);
+      setFormData({
+        code: '', origin: '', destination: '', name: '', distance: '', estimated_duration: '', status: 'Active'
+      });
+    } catch (error) {
+      console.error('Failed to create route:', error);
+      alert(error.response?.data?.message || 'Failed to create route');
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   return (
     <div className="space-y-6 animate-fade-in font-sans">
@@ -72,7 +112,20 @@ const RouteManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {MOCK_ROUTES.map((route) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500 font-medium">
+                    Loading routes...
+                  </td>
+                </tr>
+              ) : routes.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500 font-medium">
+                    No routes found matching your criteria.
+                  </td>
+                </tr>
+              ) : (
+              routes.map((route) => (
                 <tr key={route.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -94,13 +147,13 @@ const RouteManagement = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="space-y-1">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dist: <span className="text-slate-900">{route.distance}</span></p>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Est: <span className="text-slate-900">{route.time}</span></p>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dist: <span className="text-slate-900">{route.distance || '0'} km</span></p>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Est: <span className="text-slate-900">{route.estimated_duration || '0'} m</span></p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-black bg-blue-50 text-blue-700 border border-blue-100">
-                      {route.companies} Companies
+                      Official DB Route
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
@@ -131,14 +184,7 @@ const RouteManagement = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
-              {MOCK_ROUTES.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500 font-medium">
-                    No routes found matching your criteria.
-                  </td>
-                </tr>
-              )}
+              )))}
             </tbody>
           </table>
         </div>
@@ -170,38 +216,38 @@ const RouteManagement = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Route Code</label>
-                    <input type="text" placeholder="e.g. KGL-MSZ" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-800" />
+                    <input type="text" name="code" value={formData.code} onChange={handleChange} placeholder="e.g. KGL-MSZ" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-800" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Origin City/Stop</label>
-                    <input type="text" placeholder="Kigali" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold " />
+                    <input type="text" name="origin" value={formData.origin} onChange={handleChange} placeholder="Kigali" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold " />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Destination City/Stop</label>
-                    <input type="text" placeholder="Musanze" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold" />
+                    <input type="text" name="destination" value={formData.destination} onChange={handleChange} placeholder="Musanze" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold" />
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Official Name</label>
-                    <input type="text" placeholder="Kigali → Musanze" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold" />
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Kigali → Musanze" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Distance (KM)</label>
-                      <input type="number" placeholder="110" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold" />
+                      <input type="number" name="distance" value={formData.distance} onChange={handleChange} placeholder="110" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Est. Time (Mins)</label>
-                      <input type="number" placeholder="135" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold" />
+                      <input type="number" name="estimated_duration" value={formData.estimated_duration} onChange={handleChange} placeholder="135" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Initial Status</label>
-                    <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold">
-                      <option>Active / Open for Operation</option>
-                      <option>Suspended / Under Maintenance</option>
+                    <select name="status" value={formData.status} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold">
+                      <option value="Active">Active / Open for Operation</option>
+                      <option value="Suspended">Suspended / Under Maintenance</option>
                     </select>
                   </div>
                 </div>
@@ -222,7 +268,7 @@ const RouteManagement = () => {
               >
                 Cancel
               </button>
-              <button className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-lg shadow-md transition-colors text-sm flex items-center gap-2">
+              <button onClick={handleCreateRoute} className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-lg shadow-md transition-colors text-sm flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" /> Save Official Route
               </button>
             </div>

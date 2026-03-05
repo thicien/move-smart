@@ -24,6 +24,9 @@ app.use('/api/payments', paymentRoutes);
 const trackingRoutes = require('./src/routes/trackingRoutes');
 app.use('/api/tracking', trackingRoutes);
 
+const adminRoutes = require('./src/routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Bus Tracking System API is running' });
 });

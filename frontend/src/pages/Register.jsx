@@ -139,6 +139,7 @@ const Register = () => {
                 >
                   <option value="passenger">Passenger Account</option>
                   <option value="company_admin">Company Administrator</option>
+                  <option value="government">Government Official</option>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
