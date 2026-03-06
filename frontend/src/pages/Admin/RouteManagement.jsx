@@ -9,11 +9,13 @@ import axios from 'axios';
 const RouteManagement = () => {
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
+    id: null,
     code: '',
     origin: '',
     destination: '',
@@ -26,35 +28,95 @@ const RouteManagement = () => {
   const fetchRoutes = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://127.0.0.1:5000/api/admin/routes');
+      setErrorMsg('');
+      const token = localStorage.getItem('token');
+      const res = await axios.get('http://127.0.0.1:5000/api/admin/routes', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setRoutes(res.data);
     } catch (error) {
       console.error('Failed to fetch routes:', error);
+      setErrorMsg(error.message + (error.response ? ' - ' + JSON.stringify(error.response.data) : ''));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateRoute = async (e) => {
+  const handleSaveRoute = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://127.0.0.1:5000/api/admin/routes', formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      if (formData.id) {
+        // Update existing route
+        await axios.put(`http://127.0.0.1:5000/api/admin/routes/${formData.id}`, formData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else {
+        // Create new route
+        await axios.post('http://127.0.0.1:5000/api/admin/routes', formData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
       fetchRoutes();
       setIsModalOpen(false);
       setFormData({
-        code: '', origin: '', destination: '', name: '', distance: '', estimated_duration: '', status: 'Active'
+        id: null, code: '', origin: '', destination: '', name: '', distance: '', estimated_duration: '', status: 'Active'
       });
     } catch (error) {
-      console.error('Failed to create route:', error);
-      alert(error.response?.data?.message || 'Failed to create route');
+      console.error('Failed to save route:', error);
+      alert(error.response?.data?.message || 'Failed to save route');
+    }
+  };
+
+  const handleEditClick = (route) => {
+    setFormData({
+      id: route.id,
+      code: route.code,
+      origin: route.origin,
+      destination: route.destination,
+      name: route.name,
+      distance: route.distance || '',
+      estimated_duration: route.estimated_duration || '',
+      status: route.status
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteRoute = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this route? This action cannot be undone.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://127.0.0.1:5000/api/admin/routes/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchRoutes();
+    } catch (error) {
+       alert(error.response?.data?.message || 'Failed to delete route');
+    }
+  };
+
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'Active' ? 'Suspended' : 'Active';
+      const token = localStorage.getItem('token');
+      await axios.patch(`http://127.0.0.1:5000/api/admin/routes/${id}/status`, { status: newStatus }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchRoutes();
+    } catch (error) {
+       alert(error.response?.data?.message || 'Failed to update status');
     }
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const openCreateModal = () => {
+    setFormData({
+      id: null, code: '', origin: '', destination: '', name: '', distance: '', estimated_duration: '', status: 'Active'
+    });
+    setIsModalOpen(true);
   };
 
   return (
@@ -69,7 +131,7 @@ const RouteManagement = () => {
           <p className="text-slate-500 text-sm mt-1 font-medium">Define, approve, and manage official transport corridors.</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={openCreateModal}
           className="bg-sky-600 hover:bg-sky-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md transition-colors flex items-center gap-2"
         >
           <Plus className="w-5 h-5" /> Create Official Route
@@ -116,6 +178,12 @@ const RouteManagement = () => {
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center text-slate-500 font-medium">
                     Loading routes...
+                  </td>
+                </tr>
+              ) : errorMsg ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-red-500 font-medium">
+                    Error loading routes: {errorMsg}
                   </td>
                 </tr>
               ) : routes.length === 0 ? (
@@ -169,18 +237,21 @@ const RouteManagement = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded transition-colors" title="Edit Route">
+                      <button onClick={() => handleEditClick(route)} className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded transition-colors" title="Edit Route">
                         <Edit2 className="w-4 h-4" />
                       </button>
                       {route.status === 'Active' ? (
-                        <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Suspend Route">
+                        <button onClick={() => handleToggleStatus(route.id, route.status)} className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors" title="Suspend Route">
                           <ShieldAlert className="w-4 h-4" />
                         </button>
                       ) : (
-                        <button className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="Activate Route">
+                        <button onClick={() => handleToggleStatus(route.id, route.status)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="Activate Route">
                           <CheckCircle2 className="w-4 h-4" />
                         </button>
                       )}
+                      <button onClick={() => handleDeleteRoute(route.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Route">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -203,7 +274,7 @@ const RouteManagement = () => {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-slate-200 flex items-center justify-between shrink-0 bg-slate-50">
               <div>
-                <h3 className="text-lg font-black text-slate-800">Create Official Route</h3>
+                <h3 className="text-lg font-black text-slate-800">{formData.id ? 'Edit Official Route' : 'Create Official Route'}</h3>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Register string path into National Database</p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 bg-white p-2 rounded-lg border border-slate-200 transition-colors">
@@ -268,8 +339,8 @@ const RouteManagement = () => {
               >
                 Cancel
               </button>
-              <button onClick={handleCreateRoute} className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-lg shadow-md transition-colors text-sm flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> Save Official Route
+              <button onClick={handleSaveRoute} className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-lg shadow-md transition-colors text-sm flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" /> {formData.id ? 'Update Route' : 'Save Official Route'}
               </button>
             </div>
           </div>
