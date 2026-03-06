@@ -13,7 +13,6 @@ const RouteManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     id: null,
     code: '',
@@ -24,6 +23,10 @@ const RouteManagement = () => {
     estimated_duration: '',
     status: 'Active'
   });
+
+  useEffect(() => {
+    fetchRoutes();
+  }, []);
 
   const fetchRoutes = async () => {
     try {

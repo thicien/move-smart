@@ -1,26 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   DollarSign, Search, Edit2, AlertTriangle, ShieldAlert,
   Settings, CheckCircle2, TrendingUp, Info
 } from 'lucide-react';
 
-// Mock DB Pricing Models
-const MOCK_FARES = [
-  { id: 'RT-001', code: 'KGL-MSZ', name: 'Kigali → Musanze', base: 3000, min: 2500, max: 3500, tax: 5, status: 'Active' },
-  { id: 'RT-002', code: 'KGL-HUY', name: 'Kigali → Huye', base: 4000, min: 3500, max: 4500, tax: 5, status: 'Active' },
-  { id: 'RT-003', code: 'KGL-RBV', name: 'Kigali → Rubavu', base: 5000, min: 4500, max: 6000, tax: 6.5, status: 'Active' },
-  { id: 'RT-004', code: 'MSZ-RBV', name: 'Musanze → Rubavu', base: 1500, min: 1200, max: 2000, tax: 5, status: 'Pending Review' },
-  { id: 'RT-005', code: 'KGL-RMG', name: 'Kigali → Rwamagana', base: 1200, min: 1000, max: 1500, tax: 5, status: 'Active' },
-];
+import axios from 'axios';
 
 const FarePricing = () => {
+  const [routes, setRoutes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState(null);
 
+  const fetchRoutes = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const res = await axios.get('http://127.0.0.1:5000/api/admin/routes', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRoutes(res.data);
+    } catch (error) {
+      console.error('Failed to fetch routes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoutes();
+  }, []);
+
   const handleEdit = (route) => {
-    setSelectedRoute(route);
+    setSelectedRoute({ ...route });
     setShowConfigModal(true);
+  };
+
+  const handlePolicyChange = (e) => {
+    setSelectedRoute({ ...selectedRoute, [e.target.name]: parseFloat(e.target.value) || 0 });
+  };
+
+  const handleUpdatePolicy = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`http://127.0.0.1:5000/api/admin/routes/${selectedRoute.id}`, {
+        base_fare: selectedRoute.base_fare,
+        min_fare: selectedRoute.min_fare,
+        max_fare: selectedRoute.max_fare,
+        tax_percentage: selectedRoute.tax_percentage
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShowConfigModal(false);
+      fetchRoutes();
+    } catch (error) {
+      console.error('Failed to update policy:', error);
+      alert(error.response?.data?.message || 'Failed to update policy');
+    }
   };
 
   return (
@@ -90,40 +127,52 @@ const FarePricing = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {MOCK_FARES.map((route) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500 font-medium">
+                    Loading pricing policies...
+                  </td>
+                </tr>
+              ) : routes.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500 font-medium">
+                    No routes found. Please create official routes first.
+                  </td>
+                </tr>
+              ) : routes.map((route) => (
                 <tr key={route.id} className="hover:bg-slate-50 transition-colors group">
                   <td className="px-6 py-4">
                     <p className="text-sm font-black text-slate-900 leading-tight">{route.name}</p>
                     <p className="text-xs font-bold text-slate-500 mt-1 font-mono">{route.code}</p>
                   </td>
                   <td className="px-6 py-4">
-                     <span className="text-lg font-black text-slate-800">{route.base.toLocaleString()} <span className="text-xs text-slate-400">RWF</span></span>
+                     <span className="text-lg font-black text-slate-800">{(route.base_fare || 0).toLocaleString()} <span className="text-xs text-slate-400">RWF</span></span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                        <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded border border-slate-200">
-                         {route.min.toLocaleString()} RWF
+                         {(route.min_fare || 0).toLocaleString()} RWF
                        </span>
                        <span className="text-slate-400 font-black">-</span>
                        <span className="px-2 py-1 bg-red-50 text-red-700 text-xs font-bold rounded border border-red-100">
-                         {route.max.toLocaleString()} RWF
+                         {(route.max_fare || 0).toLocaleString()} RWF
                        </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
                       <TrendingUp className="w-4 h-4" />
-                      <span className="text-sm font-black">{route.tax}%</span>
+                      <span className="text-sm font-black">{route.tax_percentage || 0}%</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    {route.status === 'Active' ? (
+                    {(route.max_fare > 0 && route.tax_percentage > 0) ? (
                       <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest flex justify-center items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Enforced
                       </span>
                     ) : (
                       <span className="text-xs font-bold text-amber-600 uppercase tracking-widest flex justify-center items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5" /> Pending
+                        <AlertTriangle className="w-3.5 h-3.5" /> Pending Config
                       </span>
                     )}
                   </td>
@@ -161,25 +210,31 @@ const FarePricing = () => {
                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                   <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Target Revenue Deduction (%)</label>
                   <div className="flex items-center gap-4">
-                     <input type="number" defaultValue={selectedRoute.tax} className="w-32 p-3 border border-emerald-300 rounded-lg text-2xl font-black text-emerald-700 bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-center" />
+                     <input type="number" name="tax_percentage" value={selectedRoute.tax_percentage} onChange={handlePolicyChange} className="w-32 p-3 border border-emerald-300 rounded-lg text-2xl font-black text-emerald-700 bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-center" />
                      <p className="text-sm font-medium text-slate-600 leading-tight">
                        This percentage will be automatically sliced from every passenger ticket purchased on this route and deposited into the Government Reserve.
                      </p>
                   </div>
                </div>
 
-               <div className="grid grid-cols-2 gap-4">
+               <div className="space-y-4">
                  <div>
-                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Legal Minimum Fare (RWF)</label>
-                   <input type="number" defaultValue={selectedRoute.min} className="w-full p-3 border border-slate-300 rounded-lg text-lg font-bold focus:outline-none focus:border-emerald-500" />
+                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Base Fare/Estimate (RWF)</label>
+                   <input type="number" name="base_fare" value={selectedRoute.base_fare} onChange={handlePolicyChange} className="w-full p-3 border border-slate-300 rounded-lg text-lg font-bold focus:outline-none focus:border-emerald-500 text-slate-500 bg-slate-50" />
                  </div>
-                 <div>
-                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Legal Maximum Fare (RWF)</label>
-                   <div className="relative">
-                     <input type="number" defaultValue={selectedRoute.max} className="w-full p-3 border border-red-300 rounded-lg text-lg font-bold text-red-700 bg-red-50 focus:outline-none focus:border-red-500" />
-                     <AlertTriangle className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 w-5 h-5" />
+                 <div className="grid grid-cols-2 gap-4">
+                   <div>
+                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Legal Minimum Fare (RWF)</label>
+                     <input type="number" name="min_fare" value={selectedRoute.min_fare} onChange={handlePolicyChange} className="w-full p-3 border border-slate-300 rounded-lg text-lg font-bold focus:outline-none focus:border-emerald-500" />
                    </div>
-                   <p className="text-[10px] uppercase font-bold text-red-600 mt-1 text-right">Hard Ceiling Trigger</p>
+                   <div>
+                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Legal Maximum Fare (RWF)</label>
+                     <div className="relative">
+                       <input type="number" name="max_fare" value={selectedRoute.max_fare} onChange={handlePolicyChange} className="w-full p-3 border border-red-300 rounded-lg text-lg font-bold text-red-700 bg-red-50 focus:outline-none focus:border-red-500" />
+                       <AlertTriangle className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 w-5 h-5" />
+                     </div>
+                     <p className="text-[10px] uppercase font-bold text-red-600 mt-1 text-right">Hard Ceiling Trigger</p>
+                   </div>
                  </div>
                </div>
             </div>
@@ -192,7 +247,7 @@ const FarePricing = () => {
                 Cancel
               </button>
               <button 
-                onClick={() => setShowConfigModal(false)}
+                onClick={handleUpdatePolicy}
                 className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-lg shadow-md transition-colors text-sm flex items-center gap-2"
               >
                 Enforce Policy Update
