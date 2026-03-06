@@ -36,8 +36,14 @@ exports.getCompanies = async (req, res) => {
 // --- BUS ENDPOINTS ---
 exports.addBus = async (req, res) => {
   try {
-    const { company_id, license_plate, capacity, route_id, seat_price } = req.body;
+    const { company_id, license_plate, capacity, route_id, seat_price, driver_name, driver_phone } = req.body;
     
+    // Find true company via admin_id which is passed from frontend user.id
+    const company = await Company.findOne({ where: { admin_id: company_id } });
+    if (!company) {
+      return res.status(404).json({ message: 'Company not found for this user' });
+    }
+
     // Process image file if uploaded
     let image_url = null;
     if (req.file) {
@@ -55,13 +61,15 @@ exports.addBus = async (req, res) => {
     }
 
     const bus = await Bus.create({
-      company_id,
+      company_id: company.id,
       license_plate,
       capacity,
       status: 'active',
       route_id: route_id || null,
       seat_price: seat_price || null,
-      image_url: image_url
+      image_url: image_url,
+      driver_name: driver_name || null,
+      driver_phone: driver_phone || null
     });
     
     // Fetch with associated route details
@@ -79,7 +87,7 @@ exports.addBus = async (req, res) => {
 exports.updateBus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { license_plate, capacity, route_id, seat_price, status } = req.body;
+    const { license_plate, capacity, route_id, seat_price, status, driver_name, driver_phone } = req.body;
     
     const bus = await Bus.findByPk(id);
     if (!bus) return res.status(404).json({ message: 'Bus not found' });
@@ -105,7 +113,9 @@ exports.updateBus = async (req, res) => {
       route_id: route_id || null,
       seat_price: seat_price || null,
       status,
-      image_url
+      image_url,
+      driver_name: driver_name || null,
+      driver_phone: driver_phone || null
     });
 
     const updatedBus = await Bus.findByPk(id, {
@@ -136,8 +146,14 @@ exports.deleteBus = async (req, res) => {
 exports.getCompanyBuses = async (req, res) => {
   try {
     const { company_id } = req.params;
+    
+    const company = await Company.findOne({ where: { admin_id: company_id } });
+    if (!company) {
+      return res.json([]);
+    }
+
     const buses = await Bus.findAll({ 
-      where: { company_id },
+      where: { company_id: company.id },
       include: [{ model: Route, attributes: ['name', 'code'] }]
     });
     res.json(buses);
@@ -178,7 +194,7 @@ exports.getCompanyRoutes = async (req, res) => {
 // --- SCHEDULE ENDPOINTS ---
 exports.addSchedule = async (req, res) => {
   try {
-    const { bus_id, route_id, departure_time, arrival_time, price, available_seats } = req.body;
+    const { bus_id, route_id, departure_time, arrival_time, price, available_seats, driver_name, driver_phone } = req.body;
 
     const schedule = await Schedule.create({
       bus_id,
@@ -186,7 +202,9 @@ exports.addSchedule = async (req, res) => {
       departure_time,
       arrival_time,
       price,
-      available_seats
+      available_seats,
+      driver_name,
+      driver_phone
     });
     res.status(201).json({ message: 'Schedule added', schedule });
   } catch (error) {
@@ -196,17 +214,69 @@ exports.addSchedule = async (req, res) => {
 
 exports.getSchedules = async (req, res) => {
   try {
-    const { origin, destination, date } = req.query;
-    // A more complex query could filter by route and date.
-    // Simplifying here to just return all schedules with associated routes.
+    const { company_id } = req.params;
+    
+    // Find true company via admin_id
+    const company = await Company.findOne({ where: { admin_id: company_id } });
+    if (!company) {
+      return res.json([]);
+    }
+
+    // A schedule belongs to a Bus. Get all buses belonging to this company.
+    const buses = await Bus.findAll({ where: { company_id: company.id }, attributes: ['id'] });
+    const busIds = buses.map(b => b.id);
+
+    // Now get schedules mapped to those bus IDs
     const schedules = await Schedule.findAll({
+      where: { bus_id: busIds },
       include: [
-        { model: Bus, attributes: ['license_plate', 'capacity'] },
-        { model: Route, attributes: ['origin', 'destination'] }
+        { model: Bus, attributes: ['id', 'license_plate', 'capacity', 'image_url'] },
+        { model: Route, attributes: ['id', 'name', 'code', 'origin', 'destination', 'distance', 'estimated_duration'] }
       ]
     });
     res.json(schedules);
   } catch (error) {
+    console.error('getSchedules error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateSchedule = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bus_id, route_id, departure_time, arrival_time, price, available_seats, driver_name, driver_phone } = req.body;
+    
+    const schedule = await Schedule.findByPk(id);
+    if (!schedule) return res.status(404).json({ message: 'Schedule not found' });
+
+    await schedule.update({
+      bus_id,
+      route_id,
+      departure_time,
+      arrival_time,
+      price,
+      available_seats,
+      driver_name,
+      driver_phone
+    });
+
+    res.json({ message: 'Schedule updated successfully', schedule });
+  } catch (error) {
+    console.error('Update schedule error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.deleteSchedule = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const schedule = await Schedule.findByPk(id);
+    if (!schedule) return res.status(404).json({ message: 'Schedule not found' });
+
+    await schedule.destroy();
+    res.json({ message: 'Schedule deleted successfully' });
+  } catch (error) {
+    console.error('Delete schedule error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

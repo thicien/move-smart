@@ -44,6 +44,14 @@ const Bus = sequelize.define('Bus', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  driver_name: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  driver_phone: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   timestamps: true,
 });

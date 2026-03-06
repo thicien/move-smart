@@ -19,6 +19,8 @@ const ManageBuses = () => {
     capacity: 30,
     route_id: '',
     seat_price: '',
+    driver_name: '',
+    driver_phone: '',
     image: null,
     status: 'active'
   });
@@ -100,6 +102,8 @@ const ManageBuses = () => {
       submitData.append('capacity', formData.capacity);
       submitData.append('route_id', formData.route_id);
       submitData.append('seat_price', formData.seat_price);
+      submitData.append('driver_name', formData.driver_name);
+      submitData.append('driver_phone', formData.driver_phone);
       submitData.append('status', formData.status);
       if (formData.image instanceof File) {
         submitData.append('image', formData.image);
@@ -151,6 +155,8 @@ const ManageBuses = () => {
       capacity: bus.capacity,
       route_id: bus.route_id || '',
       seat_price: bus.seat_price || '',
+      driver_name: bus.driver_name || '',
+      driver_phone: bus.driver_phone || '',
       status: bus.status,
       image: bus.image_url
     });
@@ -160,7 +166,7 @@ const ManageBuses = () => {
   };
 
   const resetForm = () => {
-    setFormData({ id: null, license_plate: '', capacity: 30, route_id: '', seat_price: '', image: null, status: 'active' });
+    setFormData({ id: null, license_plate: '', capacity: 30, route_id: '', seat_price: '', driver_name: '', driver_phone: '', image: null, status: 'active' });
     setPreviewImage(null);
     setValidationError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -238,7 +244,8 @@ const ManageBuses = () => {
                     <div className="text-xs text-slate-500 font-medium mt-0.5">{(bus.seat_price || 0).toLocaleString()} RWF / Seat</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-slate-500">Unassigned</div>
+                    <div className="text-sm font-medium text-slate-500">{bus.driver_name || 'Unassigned'}</div>
+                    {bus.driver_phone && <div className="text-xs text-slate-400 mt-0.5">{bus.driver_phone}</div>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-bold text-slate-700">{bus.Route ? bus.Route.name : 'Unassigned'}</div>
@@ -334,6 +341,20 @@ const ManageBuses = () => {
             </div>
 
             <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex justify-between">
+                <span>Assigned Driver Name</span>
+              </label>
+              <input type="text" name="driver_name" value={formData.driver_name} onChange={handleInputChange} placeholder="e.g. John Bosco Nsengimana" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all text-slate-800 font-medium placeholder:text-slate-400" />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex justify-between">
+                <span>Driver Phone Number</span>
+              </label>
+              <input type="text" name="driver_phone" value={formData.driver_phone} onChange={handleInputChange} placeholder="e.g. +250 788 123 456" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all text-slate-800 font-medium placeholder:text-slate-400" />
+            </div>
+
+            <div className="space-y-1">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned Official Route</label>
               <select name="route_id" value={formData.route_id} onChange={handleInputChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all text-slate-800 appearance-none">
                 <option value="">-- No Assignment --</option>
@@ -349,6 +370,19 @@ const ManageBuses = () => {
                 {validationError && <span className="text-red-500 animate-pulse">{validationError}</span>}
               </label>
               <input type="number" name="seat_price" value={formData.seat_price} onChange={handleInputChange} className={`w-full px-4 py-2.5 bg-slate-50 border ${validationError ? 'border-red-400 ring-2 ring-red-500/20' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all text-slate-800 font-bold`} />
+              {formData.route_id && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                  <p className="text-xs font-bold text-blue-800 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4" /> Recommended Gov Bounds
+                  </p>
+                  <p className="text-sm text-blue-600 mt-1 font-medium">
+                    {(() => {
+                      const r = routes.find(r => r.id.toString() === formData.route_id.toString());
+                      return r && r.max_fare > 0 ? `${r.min_fare} RWF - ${r.max_fare} RWF` : 'No bounds currently enforced for this route.';
+                    })()}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1 md:col-span-2">

@@ -33,6 +33,8 @@ router.get('/:company_id/routes', protect, companyController.getCompanyRoutes);
 
 // Schedules
 router.post('/schedules', protect, authorize('company_admin'), companyController.addSchedule);
-router.get('/schedules/search', protect, companyController.getSchedules);
+router.get('/:company_id/schedules', protect, authorize('company_admin', 'government'), companyController.getSchedules);
+router.put('/schedules/:id', protect, authorize('company_admin'), companyController.updateSchedule);
+router.delete('/schedules/:id', protect, authorize('company_admin'), companyController.deleteSchedule);
 
 module.exports = router;

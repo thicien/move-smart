@@ -14,6 +14,9 @@ Company.belongsTo(User, { foreignKey: 'admin_id' });
 Company.hasMany(Bus, { foreignKey: 'company_id' });
 Bus.belongsTo(Company, { foreignKey: 'company_id' });
 
+Route.hasMany(Bus, { foreignKey: 'route_id' });
+Bus.belongsTo(Route, { foreignKey: 'route_id' });
+
 Company.hasMany(Route, { foreignKey: 'company_id' });
 Route.belongsTo(Company, { foreignKey: 'company_id' });
 

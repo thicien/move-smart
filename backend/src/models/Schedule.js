@@ -31,6 +31,14 @@ const Schedule = sequelize.define('Schedule', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  driver_name: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  driver_phone: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   timestamps: true,
 });
