@@ -36,17 +36,99 @@ exports.getCompanies = async (req, res) => {
 // --- BUS ENDPOINTS ---
 exports.addBus = async (req, res) => {
   try {
-    const { company_id, license_plate, capacity } = req.body;
-    // (Ensure user is admin of this company in a real app, keeping it simple here)
+    const { company_id, license_plate, capacity, route_id, seat_price } = req.body;
+    
+    // Process image file if uploaded
+    let image_url = null;
+    if (req.file) {
+      image_url = `/uploads/buses/${req.file.filename}`;
+    }
+
+    // Validate seat price against route max_fare if route_id is provided
+    if (route_id && seat_price) {
+      const route = await Route.findByPk(route_id);
+      if (route && route.max_fare > 0 && parseFloat(seat_price) > route.max_fare) {
+        return res.status(400).json({ 
+          message: `Price too high! The government has set a maximum legal fare of ${route.max_fare} RWF for this route.` 
+        });
+      }
+    }
 
     const bus = await Bus.create({
       company_id,
       license_plate,
       capacity,
-      status: 'active'
+      status: 'active',
+      route_id: route_id || null,
+      seat_price: seat_price || null,
+      image_url: image_url
     });
-    res.status(201).json({ message: 'Bus added', bus });
+    
+    // Fetch with associated route details
+    const newBus = await Bus.findByPk(bus.id, {
+      include: [{ model: Route, attributes: ['name', 'code'] }]
+    });
+
+    res.status(201).json({ message: 'Bus added', bus: newBus });
   } catch (error) {
+    console.error('Add bus error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateBus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { license_plate, capacity, route_id, seat_price, status } = req.body;
+    
+    const bus = await Bus.findByPk(id);
+    if (!bus) return res.status(404).json({ message: 'Bus not found' });
+
+    // Validate seat price against route max_fare if route_id is provided
+    if (route_id && seat_price) {
+      const route = await Route.findByPk(route_id);
+      if (route && route.max_fare > 0 && parseFloat(seat_price) > route.max_fare) {
+         return res.status(400).json({ 
+          message: `Price too high! The government has set a maximum legal fare of ${route.max_fare} RWF for this route.` 
+        });
+      }
+    }
+
+    let image_url = bus.image_url;
+    if (req.file) {
+      image_url = `/uploads/buses/${req.file.filename}`;
+    }
+
+    await bus.update({
+      license_plate,
+      capacity,
+      route_id: route_id || null,
+      seat_price: seat_price || null,
+      status,
+      image_url
+    });
+
+    const updatedBus = await Bus.findByPk(id, {
+      include: [{ model: Route, attributes: ['name', 'code'] }]
+    });
+
+    res.json({ message: 'Bus updated successfully', bus: updatedBus });
+  } catch (error) {
+    console.error('Update bus error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.deleteBus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const bus = await Bus.findByPk(id);
+    if (!bus) return res.status(404).json({ message: 'Bus not found' });
+
+    await bus.destroy();
+    res.json({ message: 'Bus deleted successfully' });
+  } catch (error) {
+    console.error('Delete bus error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -54,9 +136,13 @@ exports.addBus = async (req, res) => {
 exports.getCompanyBuses = async (req, res) => {
   try {
     const { company_id } = req.params;
-    const buses = await Bus.findAll({ where: { company_id } });
+    const buses = await Bus.findAll({ 
+      where: { company_id },
+      include: [{ model: Route, attributes: ['name', 'code'] }]
+    });
     res.json(buses);
   } catch (error) {
+    console.error('Get buses error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

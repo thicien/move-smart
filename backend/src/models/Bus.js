@@ -32,6 +32,18 @@ const Bus = sequelize.define('Bus', {
     type: DataTypes.ENUM('active', 'maintenance', 'inactive'),
     defaultValue: 'active',
   },
+  route_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  seat_price: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  image_url: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   timestamps: true,
 });

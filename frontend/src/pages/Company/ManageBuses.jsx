@@ -1,16 +1,170 @@
-import { useState } from 'react';
-import { Bus, Plus, Search, Filter, MoreVertical, Edit2, Trash2, Eye, ShieldCheck, Wrench } from 'lucide-react';
-
-const MOCK_BUSES = [
-  { id: 1, number: 'B-001', plate: 'RAD 424 A', seats: 30, type: 'VIP', driver: 'John Nsengimana', status: 'Active', route: 'Kigli - Musanze' },
-  { id: 2, number: 'B-002', plate: 'RAC 911 E', seats: 45, type: 'Standard', driver: 'Paul Kagabo', status: 'Active', route: 'Kigali - Huye' },
-  { id: 3, number: 'B-003', plate: 'RAB 102 C', seats: 30, type: 'Standard', driver: 'Unassigned', status: 'Maintenance', route: 'N/A' },
-  { id: 4, number: 'B-004', plate: 'RAF 882 K', seats: 30, type: 'VIP', driver: 'Eric Mugisha', status: 'Active', route: 'Kigali - Rubavu' },
-];
+import { useState, useEffect, useRef } from 'react';
+import { Bus, Plus, Search, Filter, Edit2, Trash2, Eye, ShieldCheck, Wrench, Upload } from 'lucide-react';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
 
 const ManageBuses = () => {
-  const [view, setView] = useState('list'); // 'list' | 'add' | 'details'
+  const { user } = useAuth();
+  const [view, setView] = useState('list'); // 'list' | 'add' | 'edit'
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [buses, setBuses] = useState([]);
+  const [routes, setRoutes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    id: null,
+    license_plate: '',
+    capacity: 30,
+    route_id: '',
+    seat_price: '',
+    image: null,
+    status: 'active'
+  });
+  
+  const [previewImage, setPreviewImage] = useState(null);
+  const fileInputRef = useRef(null);
+  const [validationError, setValidationError] = useState('');
+
+  useEffect(() => {
+    fetchBuses();
+    fetchRoutes();
+  }, []);
+
+  const fetchBuses = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`http://127.0.0.1:5000/api/companies/${user.id}/buses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBuses(res.data);
+    } catch (error) {
+      console.error('Failed to fetch buses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRoutes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('http://127.0.0.1:5000/api/admin/routes', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRoutes(res.data);
+    } catch (error) {
+      console.error('Failed to fetch routes:', error);
+    }
+  };
+
+  // Form Handlers
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Live price validation
+    if (name === 'seat_price' || name === 'route_id') {
+      const rId = name === 'route_id' ? value : formData.route_id;
+      const sPrice = name === 'seat_price' ? parseFloat(value) : parseFloat(formData.seat_price);
+      
+      const selectedRoute = routes.find(r => r.id.toString() === rId.toString());
+      if (selectedRoute && selectedRoute.max_fare > 0 && sPrice > selectedRoute.max_fare) {
+        setValidationError(`Price exceeds Gov limit of ${selectedRoute.max_fare} RWF!`);
+      } else {
+        setValidationError('');
+      }
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, image: file });
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSaveBus = async (e) => {
+    e.preventDefault();
+    if (validationError) {
+      alert("Cannot save: " + validationError);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const submitData = new FormData();
+      submitData.append('company_id', user.id);
+      submitData.append('license_plate', formData.license_plate);
+      submitData.append('capacity', formData.capacity);
+      submitData.append('route_id', formData.route_id);
+      submitData.append('seat_price', formData.seat_price);
+      submitData.append('status', formData.status);
+      if (formData.image instanceof File) {
+        submitData.append('image', formData.image);
+      }
+
+      if (view === 'edit') {
+        await axios.put(`http://127.0.0.1:5000/api/companies/buses/${formData.id}`, submitData, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      } else {
+        await axios.post('http://127.0.0.1:5000/api/companies/buses', submitData, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
+      
+      setView('list');
+      fetchBuses();
+      resetForm();
+    } catch (error) {
+       console.error('Failed to save bus:', error);
+       alert(error.response?.data?.message || 'Failed to save bus');
+    }
+  };
+
+  const handleDeleteBus = async (id) => {
+    if (window.confirm('Are you sure you want to permanently delete this bus?')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`http://127.0.0.1:5000/api/companies/buses/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        fetchBuses();
+      } catch (error) {
+        console.error('Failed to delete bus:', error);
+      }
+    }
+  };
+
+  const openEdit = (bus) => {
+    setFormData({
+      id: bus.id,
+      license_plate: bus.license_plate,
+      capacity: bus.capacity,
+      route_id: bus.route_id || '',
+      seat_price: bus.seat_price || '',
+      status: bus.status,
+      image: bus.image_url
+    });
+    setPreviewImage(bus.image_url ? `http://127.0.0.1:5000${bus.image_url}` : null);
+    setValidationError('');
+    setView('edit');
+  };
+
+  const resetForm = () => {
+    setFormData({ id: null, license_plate: '', capacity: 30, route_id: '', seat_price: '', image: null, status: 'active' });
+    setPreviewImage(null);
+    setValidationError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const renderList = () => (
     <div className="space-y-6 animate-fade-in">
@@ -35,7 +189,7 @@ const ManageBuses = () => {
             <Filter className="w-4 h-4" /> Filter
           </button>
           <button 
-            onClick={() => setView('add')}
+            onClick={() => { resetForm(); setView('add'); }}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md transition-colors"
           >
             <Plus className="w-4 h-4" /> Add New Bus
@@ -58,46 +212,52 @@ const ManageBuses = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {MOCK_BUSES.filter(b => b.plate.toLowerCase().includes(searchTerm.toLowerCase()) || b.number.toLowerCase().includes(searchTerm.toLowerCase())).map((bus) => (
+              {loading ? (
+                 <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500 font-medium">Loading buses...</td>
+                 </tr>
+              ) : buses.filter(b => b.license_plate.toLowerCase().includes(searchTerm.toLowerCase())).map((bus) => (
                 <tr key={bus.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 border border-orange-100">
-                        <Bus className="w-5 h-5" />
-                      </div>
+                      {bus.image_url ? (
+                        <img src={`http://127.0.0.1:5000${bus.image_url}`} alt="Bus" className="w-12 h-12 rounded-lg object-cover border border-slate-200" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 border border-orange-100">
+                          <Bus className="w-6 h-6" />
+                        </div>
+                      )}
                       <div>
-                        <div className="font-bold text-slate-800">{bus.number}</div>
-                        <div className="text-xs font-mono font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded mt-1 inline-block border border-slate-200">{bus.plate}</div>
+                        <div className="text-xs font-mono font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded border border-slate-200">{bus.license_plate}</div>
+                        <div className="text-xs text-slate-500 mt-1">ID: #{bus.id}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-slate-700">{bus.type}</div>
-                    <div className="text-xs text-slate-500">{bus.seats} Seats</div>
+                    <div className="text-sm font-bold text-slate-700">{bus.capacity} Seats</div>
+                    <div className="text-xs text-slate-500 font-medium mt-0.5">{(bus.seat_price || 0).toLocaleString()} RWF / Seat</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-slate-800">{bus.driver}</div>
+                    <div className="text-sm font-medium text-slate-500">Unassigned</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-slate-600">{bus.route}</div>
+                    <div className="text-sm font-bold text-slate-700">{bus.Route ? bus.Route.name : 'Unassigned'}</div>
+                    {bus.Route && <div className="text-xs text-slate-500 font-mono">{bus.Route.code}</div>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold
-                      ${bus.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}
+                      ${bus.status === 'active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}
                     `}>
-                      {bus.status === 'Active' ? <ShieldCheck className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
-                      {bus.status}
+                      {bus.status === 'active' ? <ShieldCheck className="w-3.5 h-3.5" /> : <Wrench className="w-3.5 h-3.5" />}
+                      {bus.status.toUpperCase()}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="View Details">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded" title="Edit">
+                      <button onClick={() => openEdit(bus)} className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded" title="Edit">
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete">
+                      <button onClick={() => handleDeleteBus(bus.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -106,7 +266,7 @@ const ManageBuses = () => {
               ))}
             </tbody>
           </table>
-          {MOCK_BUSES.length === 0 && (
+          {buses.length === 0 && !loading && (
             <div className="p-12 text-center text-slate-500">
               No buses found matching your criteria.
             </div>
@@ -126,40 +286,78 @@ const ManageBuses = () => {
           ← Back to Fleet
         </button>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Register New Bus</h2>
-          <p className="text-gray-500 text-sm mt-1">Add a new vehicle to your operational fleet.</p>
+          <h2 className="text-2xl font-bold text-gray-800">{view === 'edit' ? 'Edit Bus Specifications' : 'Register New Bus'}</h2>
+          <p className="text-gray-500 text-sm mt-1">Configure vehicle details and physical upload imagery.</p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSaveBus}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Internal Bus Number/ID</label>
-              <input type="text" placeholder="e.g. B-015" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all placeholder:text-slate-400 text-slate-800" />
+            
+            {/* Image Upload spanning top */}
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bus Image / Photo</label>
+              <div 
+                 className={`border-2 border-dashed ${previewImage ? 'border-orange-500 bg-orange-50' : 'border-slate-300 bg-slate-50'} rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 transition-colors relative`}
+                 onClick={() => fileInputRef.current?.click()}
+              >
+                {previewImage ? (
+                  <img src={previewImage} alt="Preview" className="h-48 rounded-lg object-contain" />
+                ) : (
+                  <>
+                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm text-slate-400 mb-3 border border-slate-200">
+                      <Upload className="w-5 h-5" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-700">Click to upload bus image</p>
+                    <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 5MB</p>
+                  </>
+                )}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </div>
             </div>
+
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">License Plate Number</label>
-              <input type="text" placeholder="e.g. RAD 123 B" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all placeholder:text-slate-400 text-slate-800" />
+              <input type="text" name="license_plate" value={formData.license_plate} onChange={handleInputChange} required placeholder="e.g. RAD 123 B" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all placeholder:text-slate-400 text-slate-800 font-mono font-bold" />
             </div>
             
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Number of Seats</label>
-              <input type="number" min="10" max="70" placeholder="e.g. 30" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all placeholder:text-slate-400 text-slate-800" />
+              <input type="number" name="capacity" value={formData.capacity} onChange={handleInputChange} required min="10" max="100" placeholder="e.g. 30" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all placeholder:text-slate-400 text-slate-800" />
             </div>
+
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bus Type</label>
-              <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all text-slate-800 appearance-none">
-                <option value="Standard">Standard (Regular Seats)</option>
-                <option value="VIP">VIP (Reclining, AC, WiFi)</option>
-                <option value="Mini">Mini-bus (Coaster)</option>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned Official Route</label>
+              <select name="route_id" value={formData.route_id} onChange={handleInputChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all text-slate-800 appearance-none">
+                <option value="">-- No Assignment --</option>
+                {routes.map(r => (
+                  <option key={r.id} value={r.id}>{r.name} ({r.code}) - Max ${r.max_fare}RWF</option>
+                ))}
               </select>
             </div>
 
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex justify-between">
+                <span>Price per Seat (RWF)</span>
+                {validationError && <span className="text-red-500 animate-pulse">{validationError}</span>}
+              </label>
+              <input type="number" name="seat_price" value={formData.seat_price} onChange={handleInputChange} className={`w-full px-4 py-2.5 bg-slate-50 border ${validationError ? 'border-red-400 ring-2 ring-red-500/20' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all text-slate-800 font-bold`} />
+            </div>
+
             <div className="space-y-1 md:col-span-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">GPS Tracker Device ID</label>
-              <input type="text" placeholder="Hardware ID for Live Tracking integration" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all placeholder:text-slate-400 font-mono text-sm text-slate-800" />
-              <p className="text-xs text-slate-400 mt-1">Required for real-time fleet map monitoring.</p>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Operating Status</label>
+              <select name="status" value={formData.status} onChange={handleInputChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 focus:bg-white outline-none transition-all text-slate-800 appearance-none">
+                <option value="active">Active In Fleet</option>
+                <option value="maintenance">Under Maintenance</option>
+                <option value="inactive">Decommissioned / Inactive</option>
+              </select>
             </div>
 
             <div className="space-y-1 md:col-span-2 pt-4 border-t border-slate-100 flex justify-end gap-3">
@@ -171,11 +369,11 @@ const ManageBuses = () => {
                 Cancel
               </button>
               <button 
-                type="button"
-                onClick={() => { alert('Bus Registered'); setView('list'); }}
-                className="px-6 py-2.5 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 shadow-md transition-colors"
+                type="submit"
+                disabled={!!validationError}
+                className={`px-6 py-2.5 ${validationError ? 'bg-red-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'} text-white font-bold rounded-xl shadow-md transition-colors`}
               >
-                Save & Register Bus
+                {view === 'edit' ? 'Update Details' : 'Save & Register Bus'}
               </button>
             </div>
           </div>
@@ -187,7 +385,7 @@ const ManageBuses = () => {
   return (
     <>
       {view === 'list' && renderList()}
-      {view === 'add' && renderAddForm()}
+      {view === 'add' || view === 'edit' ? renderAddForm() : null}
       {/* Details view could go here, omitting for brevity to keep the file focused on the main dual requirement */}
     </>
   );

@@ -40,6 +40,22 @@ const Route = sequelize.define('Route', {
     type: DataTypes.INTEGER,
     allowNull: true, // in minutes
   },
+  base_fare: {
+    type: DataTypes.FLOAT,
+    defaultValue: 0,
+  },
+  min_fare: {
+    type: DataTypes.FLOAT,
+    defaultValue: 0,
+  },
+  max_fare: {
+    type: DataTypes.FLOAT,
+    defaultValue: 0,
+  },
+  tax_percentage: {
+    type: DataTypes.FLOAT,
+    defaultValue: 0,
+  },
 }, {
   timestamps: true,
 });
