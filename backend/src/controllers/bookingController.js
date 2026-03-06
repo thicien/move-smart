@@ -121,6 +121,8 @@ exports.searchSchedules = async (req, res) => {
         raw_departure: s.departure_time,
         price: s.price,
         seats: s.available_seats,
+        driver_name: s.driver_name,
+        driver_phone: s.driver_phone,
         rating: 4.5 // Mock rating for UI aesthetics until review system is built
       };
     });
