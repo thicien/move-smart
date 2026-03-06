@@ -1,12 +1,8 @@
-import { useState } from 'react';
-import { Search, Calendar, MapPin, Users, Filter, CreditCard, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Calendar, MapPin, Users, Filter, CreditCard, ArrowRight, CheckCircle2, Bus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-const MOCK_RESULTS = [
-  { id: 1, company: 'Volcano Express', departure: '08:00', arrival: '11:30', price: 4000, seats: 12, rating: 4.8 },
-  { id: 2, company: 'Horizon Express', departure: '09:15', arrival: '12:45', price: 4000, seats: 5, rating: 4.5 },
-  { id: 3, company: 'Ritco', departure: '10:30', arrival: '14:00', price: 3500, seats: 30, rating: 4.2 },
-];
+import axios from 'axios';
+import html2pdf from 'html2pdf.js';
 
 const BookTicket = () => {
   const navigate = useNavigate();
@@ -31,10 +27,45 @@ const BookTicket = () => {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSearch = (e) => {
+  const [ticketData, setTicketData] = useState(null);
+
+  useEffect(() => {
+    // Initial load: Fetch all available schedules
+    const fetchInitialSchedules = async () => {
+      try {
+        setIsProcessing(true);
+        const res = await axios.get('http://127.0.0.1:5000/api/bookings/schedules/search');
+        setResults(Array.isArray(res.data) ? res.data : []);
+      } catch (error) {
+        console.error('Failed to load initial schedules', error);
+        setResults([]);
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    fetchInitialSchedules();
+  }, []);
+
+  const handleSearch = async (e) => {
     e.preventDefault();
-    // Simulate API call to GET /api/buses?route=...
-    setResults(MOCK_RESULTS);
+    try {
+      setIsProcessing(true);
+      const res = await axios.get('http://127.0.0.1:5000/api/bookings/schedules/search', {
+        params: {
+          from: searchParams.from,
+          to: searchParams.to,
+          date: searchParams.date,
+          passengers: searchParams.passengers
+        }
+      });
+      setResults(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error('Failed to search buses', error);
+      alert('Failed to search available buses.');
+      setResults([]);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSelectSchedule = (schedule) => {
@@ -64,14 +95,53 @@ const BookTicket = () => {
     setStep(3);
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!paymentMethod) return alert('Select a payment method.');
     setIsProcessing(true);
-    // Simulate payment API trigger
-    setTimeout(() => {
-      setIsProcessing(false);
+    
+    try {
+      const token = localStorage.getItem('token');
+      // Using seat number strategy: sending selected seats to API
+      // Currently the created API primarily handles 1 seat per POST in schema.
+      // We will loop through the selected seats to book them or modify the backend to accept an array.
+      // Since schema uses a single seat string, we will convert the seats to a comma separated list for one booking.
+
+      const res = await axios.post('http://127.0.0.1:5000/api/bookings', {
+        schedule_id: selectedSchedule.id,
+        seat_number: selectedSeats.join(', '),
+        amount: selectedSeats.length * selectedSchedule.price,
+        method: paymentMethod
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setTicketData({
+         ...selectedSchedule,
+         ticket_code: res.data.booking.ticket_code,
+         seats: selectedSeats.join(', '),
+         passenger_name: 'Passenger' // In a full app, map from user profile
+      });
+      
       setStep(4);
-    }, 2000);
+    } catch (error) {
+       console.error('Payment Error', error);
+       alert(error.response?.data?.message || 'Payment failed.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    const element = document.getElementById('ticket-pdf-content');
+    const opt = {
+      margin:       0.5,
+      filename:     `MoveSmart_Ticket_${ticketData?.ticket_code || 'Trip'}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
   };
 
   return (
@@ -135,14 +205,14 @@ const BookTicket = () => {
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-l-xl focus:ring-2 focus:ring-brand-blue/30 focus:bg-white outline-none"
                   />
                 </div>
-                <button type="submit" className="bg-brand-orange hover:bg-orange-600 text-white font-bold px-6 rounded-r-xl transition-colors">
-                  Search
+                <button type="submit" disabled={isProcessing} className="bg-brand-orange hover:bg-orange-600 text-white font-bold px-6 rounded-r-xl transition-colors disabled:bg-orange-300">
+                  {isProcessing ? 'Searching...' : 'Search'}
                 </button>
               </div>
             </form>
           </div>
 
-          {results.length > 0 && (
+          {Array.isArray(results) && results.length > 0 && (
             <div className="space-y-4 animate-fade-in">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-gray-700">Available Buses ({results.length})</h3>
@@ -191,6 +261,12 @@ const BookTicket = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {(!Array.isArray(results) || results.length === 0) && !isProcessing && step === 1 && (
+            <div className="text-center py-10 bg-gray-50 rounded-2xl border border-gray-100 mt-6">
+              <p className="text-gray-500 font-medium">Search to see available trips.</p>
             </div>
           )}
         </div>
@@ -353,35 +429,66 @@ const BookTicket = () => {
           <h2 className="text-3xl font-black text-brand-dark mb-2">Payment Successful!</h2>
           <p className="text-gray-500 mb-8">Your ticket has been generated and sent to your phone/email.</p>
 
-          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-6 text-left relative overflow-hidden mb-8">
-            <div className="absolute top-0 right-0 bg-brand-blue text-white font-black px-4 py-1 rounded-bl-xl text-sm">
-              TKT-A8F9B2
+          <div id="ticket-pdf-content" className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-8 text-left relative overflow-hidden mb-8 shadow-sm">
+            {/* Header / Logo simulation */}
+            <div className="flex justify-between items-start mb-6 border-b-2 border-brand-orange pb-4">
+               <div>
+                  <h1 className="text-2xl font-black text-brand-blue tracking-tight">MoveSmart</h1>
+                  <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Official E-Ticket</p>
+               </div>
+               <div className="text-right">
+                 <div className="bg-brand-blue text-white font-black px-4 py-1.5 rounded-lg text-sm inline-block shadow-sm">
+                   {ticketData?.ticket_code || 'TKT-PENDING'}
+                 </div>
+                 <p className="text-[10px] text-gray-400 font-mono mt-2 text-right">Scannable Validation ID</p>
+               </div>
             </div>
             
-            <h3 className="font-black text-xl text-brand-orange mb-4">{selectedSchedule.company}</h3>
+            <h3 className="font-black text-2xl text-brand-orange mb-1">{ticketData?.company || selectedSchedule.company}</h3>
+            <p className="text-sm font-bold text-gray-400 mb-6 uppercase tracking-wider">{ticketData?.bus?.license_plate || 'Assigned Vehicle'}</p>
             
-            <div className="grid grid-cols-2 gap-y-4 text-sm">
+            <div className="grid grid-cols-2 gap-y-6 text-sm bg-gray-50/50 p-4 rounded-xl">
               <div>
-                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Route</span>
-                <strong className="text-gray-800 text-base">{searchParams.from} ➔ {searchParams.to}</strong>
+                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Route Corridor</span>
+                <strong className="text-gray-900 text-base">{ticketData?.route?.origin || searchParams.from} ➔ {ticketData?.route?.destination || searchParams.to}</strong>
               </div>
               <div>
                 <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Date & Time</span>
-                <strong className="text-gray-800 text-base">{searchParams.date} at {selectedSchedule.departure}</strong>
+                <strong className="text-gray-900 text-base">{searchParams.date} at {ticketData?.departure || selectedSchedule.departure}</strong>
               </div>
               <div>
-                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Passenger</span>
-                <strong className="text-gray-800 text-base">John Doe</strong>
+                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Lead Passenger</span>
+                <strong className="text-gray-900 text-base">{ticketData?.passenger_name}</strong>
               </div>
               <div>
-                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Seat(s)</span>
-                <strong className="text-brand-orange text-lg font-black">{selectedSeats.join(', ')}</strong>
+                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Reserved Seat(s)</span>
+                <strong className="text-brand-orange text-xl font-black">{ticketData?.seats}</strong>
               </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between items-end">
+               <div>
+                 <span className="block text-xs font-bold text-gray-400 mb-0.5">Payment Method</span>
+                 <p className="font-bold text-gray-700">{paymentMethod}</p>
+               </div>
+               <div className="text-right mt-4 md:mt-0">
+                  <span className="block text-xs font-bold text-gray-500 uppercase">Total Paid</span>
+                  <span className="block text-xl font-black text-green-600">
+                    RWF {selectedSeats.length * selectedSchedule.price}
+                  </span>
+               </div>
+            </div>
+            
+            <div className="mt-8 text-center text-[10px] text-gray-400 border-t border-gray-100 pt-4 px-10 leading-relaxed uppercase">
+               Please arrive 30 minutes prior to departure. Keep this document digital or physically printed. Present upon boarding.
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <button className="bg-brand-blue hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-colors">
+            <button 
+              onClick={handleDownloadPDF}
+              className="bg-brand-blue hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-colors"
+            >
               Download PDF Ticket
             </button>
             <button 
