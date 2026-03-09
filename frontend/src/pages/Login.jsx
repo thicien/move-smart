@@ -33,7 +33,7 @@ const Login = () => {
     
     setLoading(false);
   };
-  
+
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-brand-light flex items-center justify-center p-4">
@@ -52,7 +52,6 @@ const Login = () => {
             <span className="font-semibold">Error:</span> {error}
           </div>
         )}
-
         <form onSubmit={handleLogin} className="space-y-6">
           
           <div className="space-y-1">
