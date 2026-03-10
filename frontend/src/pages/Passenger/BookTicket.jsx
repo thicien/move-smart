@@ -9,6 +9,9 @@ const BookTicket = () => {
   // Flow steps: 1=Search, 2=Select Seat, 3=Payment Method, 4=Success
   const [step, setStep] = useState(1);
   
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  
   // Search State
   const [searchParams, setSearchParams] = useState({
     from: '',
@@ -118,8 +121,11 @@ const BookTicket = () => {
       setTicketData({
          ...selectedSchedule,
          ticket_code: res.data.booking.ticket_code,
+         booking_id: res.data.booking.id,
+         payment_id: res.data.payment.id,
          seats: selectedSeats.join(', '),
-         passenger_name: 'Passenger' // In a full app, map from user profile
+         passenger_name: user ? user.name : 'Passenger',
+         passenger_phone: (user && user.phone) ? user.phone : 'Not provided'
       });
       
       setStep(4);
@@ -435,43 +441,43 @@ const BookTicket = () => {
             </div>
             
             <div className="space-y-1 mb-6">
-              <div className="flex justify-between"><span>Ticket ID:</span> <strong>{ticketData?.ticket_code || 'MS-2026-000458'}</strong></div>
-              <div className="flex justify-between"><span>Booking Code:</span> <strong>{ticketData?.ticket_code ? ticketData.ticket_code.substring(0,6).toUpperCase() : 'BKF72A'}</strong></div>
+              <div className="flex justify-between"><span>Ticket ID:</span> <strong>MS-{new Date().getFullYear()}-{(ticketData?.booking_id || 0).toString().padStart(6, '0')}</strong></div>
+              <div className="flex justify-between"><span>Booking Code:</span> <strong>{ticketData?.ticket_code || 'N/A'}</strong></div>
               <div className="flex justify-between"><span>Issued:</span> <strong>{new Date().toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong></div>
             </div>
 
             <div className="mb-4">
               <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Passenger Information</h3>
-              <div className="flex justify-between space-x-4"><span className="shrink-0">Name:</span> <strong className="truncate text-right">{ticketData?.passenger_name || 'Mugisha Thicien'}</strong></div>
-              <div className="flex justify-between"><span>Phone:</span> <strong>+250 78X XXX XXX</strong></div>
+              <div className="flex justify-between space-x-4"><span className="shrink-0">Name:</span> <strong className="truncate text-right">{ticketData?.passenger_name}</strong></div>
+              <div className="flex justify-between"><span>Phone:</span> <strong>{ticketData?.passenger_phone}</strong></div>
             </div>
 
             <div className="mb-4">
               <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Journey Information</h3>
-              <div className="flex justify-between"><span>Company:</span> <strong className="text-right">{ticketData?.company || selectedSchedule?.company || 'Volcano Express'}</strong></div>
-              <div className="flex justify-between"><span>Bus:</span> <strong>{ticketData?.bus?.license_plate || 'RAB 245K'}</strong></div>
-              <div className="flex justify-between"><span>Route:</span> <strong>{searchParams.from || 'Kigali'} → {searchParams.to || 'Huye'}</strong></div>
-              <div className="flex justify-between"><span>Departure:</span> <strong>{searchParams.from || 'Kigali'} Bus Park</strong></div>
-              <div className="flex justify-between"><span>Departure Time:</span> <strong>{selectedSchedule?.departure || '15:30'}</strong></div>
-              <div className="flex justify-between"><span>Arrival:</span> <strong>{searchParams.to || 'Huye'} Bus Terminal</strong></div>
-              <div className="flex justify-between"><span>Arrival Time:</span> <strong>{selectedSchedule?.arrival || '18:00'}</strong></div>
+              <div className="flex justify-between"><span>Company:</span> <strong className="text-right">{ticketData?.company || selectedSchedule?.company || 'N/A'}</strong></div>
+              <div className="flex justify-between"><span>Bus:</span> <strong>{ticketData?.bus?.license_plate || 'N/A'}</strong></div>
+              <div className="flex justify-between"><span>Route:</span> <strong>{selectedSchedule?.route?.origin || searchParams.from} → {selectedSchedule?.route?.destination || searchParams.to}</strong></div>
+              <div className="flex justify-between"><span>Departure:</span> <strong>{selectedSchedule?.route?.origin || searchParams.from} Bus Park</strong></div>
+              <div className="flex justify-between"><span>Departure Time:</span> <strong>{selectedSchedule?.departure || 'N/A'}</strong></div>
+              <div className="flex justify-between"><span>Arrival:</span> <strong>{selectedSchedule?.route?.destination || searchParams.to} Bus Terminal</strong></div>
+              <div className="flex justify-between"><span>Arrival Time:</span> <strong>{selectedSchedule?.arrival || 'N/A'}</strong></div>
             </div>
 
             <div className="mb-4">
               <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Seat Information</h3>
-              <div className="flex justify-between"><span>Seat Number:</span> <strong>{ticketData?.seats || selectedSeats.join(', ') || 'A12'}</strong></div>
+              <div className="flex justify-between"><span>Seat Number:</span> <strong>{ticketData?.seats || selectedSeats.join(', ')}</strong></div>
             </div>
 
             <div className="mb-6">
               <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Payment Details</h3>
-              <div className="flex justify-between"><span>Ticket Price:</span> <strong>{(selectedSeats.length * (selectedSchedule?.price || 3000)).toLocaleString()} RWF</strong></div>
-              <div className="flex justify-between"><span>Payment Method:</span> <strong>{paymentMethod || 'Mobile Money'}</strong></div>
-              <div className="flex justify-between"><span>Transaction ID:</span> <strong>MOMO{Math.floor(Math.random()*10000000)}</strong></div>
+              <div className="flex justify-between"><span>Ticket Price:</span> <strong>{(selectedSeats.length * (selectedSchedule?.price || 0)).toLocaleString()} RWF</strong></div>
+              <div className="flex justify-between"><span>Payment Method:</span> <strong>{paymentMethod}</strong></div>
+              <div className="flex justify-between"><span>Transaction ID:</span> <strong>TXN-{(ticketData?.payment_id || 0).toString().padStart(6, '0')}</strong></div>
               <div className="flex justify-between"><span>Status:</span> <strong>PAID</strong></div>
             </div>
 
             <div className="space-y-1 mb-6 text-xs">
-              <div className="flex justify-between"><span>Route Code:</span> <strong>RT-045</strong></div>
+              <div className="flex justify-between"><span>Route Code:</span> <strong>{selectedSchedule?.route?.code || 'N/A'}</strong></div>
               <div className="flex justify-between"><span>Tax Included:</span> <strong>5%</strong></div>
             </div>
 

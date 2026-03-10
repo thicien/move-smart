@@ -1,110 +1,181 @@
-import { Ticket, Calendar, Clock, MapPin, Download } from 'lucide-react';
-
-const MOCK_TICKETS = [
-  {
-    id: 'TKT-A8F9B2',
-    company: 'Volcano Express',
-    from: 'Kigali',
-    to: 'Rubavu',
-    date: 'Oct 24, 2026',
-    departure: '08:00',
-    seat: '12',
-    status: 'Upcoming'
-  },
-  {
-    id: 'TKT-X9M2L1',
-    company: 'Horizon Express',
-    from: 'Kigali',
-    to: 'Huye',
-    date: 'Oct 28, 2026',
-    departure: '14:30',
-    seat: '05',
-    status: 'Upcoming'
-  }
-];
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Download, Loader2 } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 
 const MyTickets = () => {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // We can grab the currently logged in user from localStorage to display passenger name
+  // Note: in a real app, this might come from AuthContext
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : { name: 'Passenger' };
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Please log in to view yours tickets.');
+          setLoading(false);
+          return;
+        }
+
+        const res = await axios.get('http://127.0.0.1:5000/api/bookings/my-bookings', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setTickets(res.data);
+      } catch (err) {
+        console.error('Failed to fetch tickets:', err);
+        setError('Failed to load your tickets.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTickets();
+  }, []);
+
+  const handleDownloadPDF = (ticketId, ticketCode) => {
+    const element = document.getElementById(`ticket-${ticketId}`);
+    if (!element) return;
+    
+    const opt = {
+      margin:       0.5,
+      filename:     `MoveSmart_Ticket_${ticketCode}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-10 h-10 animate-spin text-brand-orange mb-4" />
+        <p className="text-gray-500 font-bold">Loading your tickets...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 bg-red-50 rounded-2xl border border-red-100 max-w-2xl mx-auto">
+        <p className="text-brand-red font-bold">{error}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-5xl mx-auto pb-10">
+    <div className="max-w-6xl mx-auto pb-10 px-4">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h2 className="text-2xl font-bold text-brand-dark">My Tickets</h2>
-          <p className="text-gray-500 mt-1">View and manage your upcoming journeys.</p>
+          <p className="text-gray-500 mt-1">View your booking history and receipts.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
-        {MOCK_TICKETS.map((ticket) => (
-          <div key={ticket.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
+      {tickets.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
+           <p className="text-gray-500 font-bold">You don't have any tickets yet.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start animate-fade-in">
+          {tickets.map((ticket) => {
+            const schedule = ticket.Schedule || {};
+            const route = schedule.Route || {};
+            const bus = schedule.Bus || {};
+            const company = bus.Company || {};
+            const payment = ticket.Payments?.[0] || {}; // Payment might be an array or single object depending on association
+            const paymentMethod = payment.method || 'Unknown';
+            const paymentStatus = ticket.payment_status || 'PAID';
             
-            {/* Ticket Header */}
-            <div className="bg-brand-blue p-4 text-white flex justify-between items-center">
-              <div>
-                <span className="text-xs font-bold text-brand-light/70 uppercase tracking-widest block mb-0.5">Ticket Code</span>
-                <span className="text-lg font-mono font-bold tracking-wider">{ticket.id}</span>
-              </div>
-              <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
-                {ticket.status}
-              </div>
-            </div>
+            const issueDate = new Date(ticket.createdAt).toLocaleString('en-GB', { 
+               day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
 
-            {/* Ticket Body */}
-            <div className="p-6">
-              <h3 className="font-black text-xl text-brand-orange mb-6">{ticket.company}</h3>
-              
-              <div className="flex items-center justify-between mb-6 relative before:content-[''] before:absolute before:h-0.5 before:bg-gray-100 before:w-full before:top-1/2 before:-translate-y-1/2 before:z-0">
-                <div className="bg-white z-10 pr-4">
-                  <span className="text-xs text-gray-500 font-bold uppercase block mb-1">From</span>
-                  <span className="font-black text-lg text-brand-dark">{ticket.from}</span>
-                </div>
-                <div className="bg-white z-10 px-2">
-                  <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center border-2 border-white shadow-sm">
-                    <MapPin className="w-4 h-4 text-brand-blue" />
+            return (
+              <div key={ticket.id} className="flex flex-col items-center mb-4">
+                {/* The Ticket Receipt itself */}
+                <div id={`ticket-${ticket.id}`} className="bg-white border-2 border-gray-800 p-8 text-left relative overflow-hidden mb-4 w-full max-w-sm mx-auto font-mono text-sm text-gray-900 shadow-xl">
+                  <div className="text-center mb-6 border-b-2 border-dashed border-gray-800 pb-4">
+                    <h1 className="text-xl font-black tracking-widest uppercase text-brand-dark">MoveSmart Ticket</h1>
                   </div>
-                </div>
-                <div className="bg-white z-10 pl-4 text-right">
-                  <span className="text-xs text-gray-500 font-bold uppercase block mb-1">To</span>
-                  <span className="font-black text-lg text-brand-dark">{ticket.to}</span>
-                </div>
-              </div>
+                  
+                  <div className="space-y-1 mb-6">
+                    <div className="flex justify-between"><span>Ticket ID:</span> <strong>MS-{new Date(ticket.createdAt).getFullYear()}-{(ticket.id).toString().padStart(6, '0')}</strong></div>
+                    <div className="flex justify-between"><span>Booking Code:</span> <strong>{ticket.ticket_code}</strong></div>
+                    <div className="flex justify-between"><span>Issued:</span> <strong>{issueDate}</strong></div>
+                  </div>
 
-              <div className="grid grid-cols-3 gap-4 py-4 border-y border-gray-100 mb-6">
-                <div>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold uppercase mb-1">
-                    <Calendar className="w-3.5 h-3.5" /> Date
+                  <div className="mb-4">
+                    <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Passenger Information</h3>
+                    <div className="flex justify-between space-x-4"><span className="shrink-0">Name:</span> <strong className="truncate text-right">{user.name}</strong></div>
+                    <div className="flex justify-between"><span>Phone:</span> <strong>{user.phone || 'Not provided'}</strong></div>
                   </div>
-                  <strong className="text-brand-dark text-sm">{ticket.date}</strong>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold uppercase mb-1">
-                    <Clock className="w-3.5 h-3.5" /> Time
-                  </div>
-                  <strong className="text-brand-dark text-sm">{ticket.departure}</strong>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center justify-end gap-1.5 text-xs text-gray-500 font-bold uppercase mb-1">
-                    Seat
-                  </div>
-                  <strong className="text-brand-orange text-xl font-black">{ticket.seat}</strong>
-                </div>
-              </div>
 
-              <div className="flex gap-3">
-                <button className="flex-1 bg-brand-light hover:bg-gray-200 text-brand-dark font-bold py-2.5 rounded-xl transition-colors border border-gray-200 text-sm flex items-center justify-center gap-2">
-                  <Download className="w-4 h-4" /> Download PDF
+                  <div className="mb-4">
+                    <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Journey Information</h3>
+                    <div className="flex justify-between"><span>Company:</span> <strong className="text-right">{company.name || 'N/A'}</strong></div>
+                    <div className="flex justify-between"><span>Bus:</span> <strong>{bus.license_plate || 'N/A'}</strong></div>
+                    <div className="flex justify-between"><span>Route:</span> <strong>{route.origin || 'N/A'} → {route.destination || 'N/A'}</strong></div>
+                    <div className="flex justify-between"><span>Departure:</span> <strong>{route.origin || 'N/A'} Bus Park</strong></div>
+                    <div className="flex justify-between"><span>Departure Time:</span> <strong>{schedule.departure_time ? new Date(schedule.departure_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : 'N/A'}</strong></div>
+                    <div className="flex justify-between"><span>Arrival:</span> <strong>{route.destination || 'N/A'} Bus Terminal</strong></div>
+                    <div className="flex justify-between"><span>Arrival Time:</span> <strong>{schedule.arrival_time ? new Date(schedule.arrival_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : 'N/A'}</strong></div>
+                  </div>
+
+                  <div className="mb-4">
+                    <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Seat Information</h3>
+                    <div className="flex justify-between"><span>Seat Number:</span> <strong>{ticket.seat_number}</strong></div>
+                  </div>
+
+                  <div className="mb-6">
+                    <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Payment Details</h3>
+                    <div className="flex justify-between"><span>Ticket Price:</span> <strong>{Number(schedule.price || 0).toLocaleString()} RWF</strong></div>
+                    <div className="flex justify-between"><span>Payment Method:</span> <strong>{paymentMethod}</strong></div>
+                    <div className="flex justify-between"><span>Transaction ID:</span> <strong>TXN-{(payment.id || 0).toString().padStart(6, '0')}</strong></div>
+                    <div className="flex justify-between"><span>Status:</span> <strong className={paymentStatus === 'PAID' ? 'text-green-600' : 'text-gray-900'}>{paymentStatus.toUpperCase()}</strong></div>
+                  </div>
+
+                  <div className="space-y-1 mb-6 text-xs">
+                    <div className="flex justify-between"><span>Route Code:</span> <strong>{route.code || 'N/A'}</strong></div>
+                    <div className="flex justify-between"><span>Tax Included:</span> <strong>5%</strong></div>
+                  </div>
+
+                  <div className="text-center mb-6">
+                    <div className="inline-block p-1 border-2 border-gray-800 mb-1">
+                      <div className="w-20 h-20 bg-white flex flex-wrap content-start">
+                        {Array.from({length: 25}).map((_, i) => (
+                          <div key={i} className={`w-4 h-4 ${(ticket.id * i) % 3 === 0 ? 'bg-black' : 'bg-transparent'}`}></div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="font-bold tracking-widest text-xs mb-1">[ QR CODE ]</div>
+                  </div>
+
+                  <div className="text-center border-t-2 border-dashed border-gray-800 pt-4">
+                    <p className="font-bold uppercase text-xs">Please arrive 30 minutes before departure</p>
+                  </div>
+                </div>
+
+                {/* Actions outside the receipt */}
+                <button 
+                  onClick={() => handleDownloadPDF(ticket.id, ticket.ticket_code)}
+                  className="w-full max-w-sm flex items-center justify-center gap-2 bg-brand-light hover:bg-gray-200 text-brand-dark font-bold py-3 rounded-xl transition-colors border border-gray-300 shadow-sm"
+                >
+                  <Download className="w-5 h-5" /> Download Digital Copy
                 </button>
-                <button className="flex-1 bg-brand-blue hover:bg-blue-800 text-white font-bold py-2.5 rounded-xl transition-colors shadow-md text-sm">
-                  View Live Tracking
-                </button>
               </div>
-            </div>
-            
-            {/* Cutout punch holes */}
-            <div className="absolute top-[72px] -left-3 w-6 h-6 bg-brand-light rounded-full border-r border-gray-100"></div>
-            <div className="absolute top-[72px] -right-3 w-6 h-6 bg-brand-light rounded-full border-l border-gray-100"></div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
