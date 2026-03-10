@@ -429,58 +429,66 @@ const BookTicket = () => {
           <h2 className="text-3xl font-black text-brand-dark mb-2">Payment Successful!</h2>
           <p className="text-gray-500 mb-8">Your ticket has been generated and sent to your phone/email.</p>
 
-          <div id="ticket-pdf-content" className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-8 text-left relative overflow-hidden mb-8 shadow-sm">
-            {/* Header / Logo simulation */}
-            <div className="flex justify-between items-start mb-6 border-b-2 border-brand-orange pb-4">
-               <div>
-                  <h1 className="text-2xl font-black text-brand-blue tracking-tight">MoveSmart</h1>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Official E-Ticket</p>
-               </div>
-               <div className="text-right">
-                 <div className="bg-brand-blue text-white font-black px-4 py-1.5 rounded-lg text-sm inline-block shadow-sm">
-                   {ticketData?.ticket_code || 'TKT-PENDING'}
-                 </div>
-                 <p className="text-[10px] text-gray-400 font-mono mt-2 text-right">Scannable Validation ID</p>
-               </div>
+          <div id="ticket-pdf-content" className="bg-white border-2 border-gray-800 p-8 text-left relative overflow-hidden mb-8 max-w-sm mx-auto font-mono text-sm text-gray-900 shadow-sm">
+            <div className="text-center mb-6 border-b-2 border-dashed border-gray-800 pb-4">
+              <h1 className="text-xl font-black tracking-widest uppercase text-brand-dark">MoveSmart Ticket</h1>
             </div>
             
-            <h3 className="font-black text-2xl text-brand-orange mb-1">{ticketData?.company || selectedSchedule.company}</h3>
-            <p className="text-sm font-bold text-gray-400 mb-6 uppercase tracking-wider">{ticketData?.bus?.license_plate || 'Assigned Vehicle'}</p>
-            
-            <div className="grid grid-cols-2 gap-y-6 text-sm bg-gray-50/50 p-4 rounded-xl">
-              <div>
-                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Route Corridor</span>
-                <strong className="text-gray-900 text-base">{ticketData?.route?.origin || searchParams.from} ➔ {ticketData?.route?.destination || searchParams.to}</strong>
-              </div>
-              <div>
-                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Date & Time</span>
-                <strong className="text-gray-900 text-base">{searchParams.date} at {ticketData?.departure || selectedSchedule.departure}</strong>
-              </div>
-              <div>
-                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Lead Passenger</span>
-                <strong className="text-gray-900 text-base">{ticketData?.passenger_name}</strong>
-              </div>
-              <div>
-                <span className="block text-gray-500 font-bold uppercase text-xs mb-1">Reserved Seat(s)</span>
-                <strong className="text-brand-orange text-xl font-black">{ticketData?.seats}</strong>
-              </div>
+            <div className="space-y-1 mb-6">
+              <div className="flex justify-between"><span>Ticket ID:</span> <strong>{ticketData?.ticket_code || 'MS-2026-000458'}</strong></div>
+              <div className="flex justify-between"><span>Booking Code:</span> <strong>{ticketData?.ticket_code ? ticketData.ticket_code.substring(0,6).toUpperCase() : 'BKF72A'}</strong></div>
+              <div className="flex justify-between"><span>Issued:</span> <strong>{new Date().toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong></div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between items-end">
-               <div>
-                 <span className="block text-xs font-bold text-gray-400 mb-0.5">Payment Method</span>
-                 <p className="font-bold text-gray-700">{paymentMethod}</p>
-               </div>
-               <div className="text-right mt-4 md:mt-0">
-                  <span className="block text-xs font-bold text-gray-500 uppercase">Total Paid</span>
-                  <span className="block text-xl font-black text-green-600">
-                    RWF {selectedSeats.length * selectedSchedule.price}
-                  </span>
-               </div>
+            <div className="mb-4">
+              <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Passenger Information</h3>
+              <div className="flex justify-between space-x-4"><span className="shrink-0">Name:</span> <strong className="truncate text-right">{ticketData?.passenger_name || 'Mugisha Thicien'}</strong></div>
+              <div className="flex justify-between"><span>Phone:</span> <strong>+250 78X XXX XXX</strong></div>
             </div>
-            
-            <div className="mt-8 text-center text-[10px] text-gray-400 border-t border-gray-100 pt-4 px-10 leading-relaxed uppercase">
-               Please arrive 30 minutes prior to departure. Keep this document digital or physically printed. Present upon boarding.
+
+            <div className="mb-4">
+              <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Journey Information</h3>
+              <div className="flex justify-between"><span>Company:</span> <strong className="text-right">{ticketData?.company || selectedSchedule?.company || 'Volcano Express'}</strong></div>
+              <div className="flex justify-between"><span>Bus:</span> <strong>{ticketData?.bus?.license_plate || 'RAB 245K'}</strong></div>
+              <div className="flex justify-between"><span>Route:</span> <strong>{searchParams.from || 'Kigali'} → {searchParams.to || 'Huye'}</strong></div>
+              <div className="flex justify-between"><span>Departure:</span> <strong>{searchParams.from || 'Kigali'} Bus Park</strong></div>
+              <div className="flex justify-between"><span>Departure Time:</span> <strong>{selectedSchedule?.departure || '15:30'}</strong></div>
+              <div className="flex justify-between"><span>Arrival:</span> <strong>{searchParams.to || 'Huye'} Bus Terminal</strong></div>
+              <div className="flex justify-between"><span>Arrival Time:</span> <strong>{selectedSchedule?.arrival || '18:00'}</strong></div>
+            </div>
+
+            <div className="mb-4">
+              <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Seat Information</h3>
+              <div className="flex justify-between"><span>Seat Number:</span> <strong>{ticketData?.seats || selectedSeats.join(', ') || 'A12'}</strong></div>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="font-bold border-b border-gray-300 pb-1 mb-2 uppercase text-xs text-brand-orange">Payment Details</h3>
+              <div className="flex justify-between"><span>Ticket Price:</span> <strong>{(selectedSeats.length * (selectedSchedule?.price || 3000)).toLocaleString()} RWF</strong></div>
+              <div className="flex justify-between"><span>Payment Method:</span> <strong>{paymentMethod || 'Mobile Money'}</strong></div>
+              <div className="flex justify-between"><span>Transaction ID:</span> <strong>MOMO{Math.floor(Math.random()*10000000)}</strong></div>
+              <div className="flex justify-between"><span>Status:</span> <strong>PAID</strong></div>
+            </div>
+
+            <div className="space-y-1 mb-6 text-xs">
+              <div className="flex justify-between"><span>Route Code:</span> <strong>RT-045</strong></div>
+              <div className="flex justify-between"><span>Tax Included:</span> <strong>5%</strong></div>
+            </div>
+
+            <div className="text-center mb-6">
+              <div className="inline-block p-1 border-2 border-gray-800 mb-1">
+                {/* Simulated QR Code using boxes */}
+                <div className="w-20 h-20 bg-white flex flex-wrap content-start">
+                  {Array.from({length: 25}).map((_, i) => (
+                    <div key={i} className={`w-4 h-4 ${Math.random() > 0.4 ? 'bg-black' : 'bg-transparent'}`}></div>
+                  ))}
+                </div>
+              </div>
+              <div className="font-bold tracking-widest text-xs mb-1">[ QR CODE ]</div>
+            </div>
+
+            <div className="text-center border-t-2 border-dashed border-gray-800 pt-4">
+              <p className="font-bold uppercase text-xs">Please arrive 30 minutes before departure</p>
             </div>
           </div>
 
