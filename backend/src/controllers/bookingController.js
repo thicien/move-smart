@@ -55,12 +55,20 @@ exports.getUserBookings = async (req, res) => {
     const bookings = await Booking.findAll({
       where: { user_id },
       include: [
-        { model: Schedule },
+        { 
+          model: Schedule,
+          include: [
+            { model: Route },
+            { model: Bus, include: [Company] }
+          ]
+        },
         { model: Payment }
-      ]
+      ],
+      order: [['createdAt', 'DESC']]
     });
     res.json(bookings);
   } catch (error) {
+    console.error('getUserBookings error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
