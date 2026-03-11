@@ -1,6 +1,36 @@
-const { Route } = require('../models');
+const { Route, Company, Booking, Payment, sequelize } = require('../models');
 
 // --- GOVERNMENT / ADMIN ROUTE ENDPOINTS ---
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    // Total Companies
+    const totalCompanies = await Company.count();
+    
+    // Total Tickets Sold
+    const totalTickets = await Booking.count();
+    
+    // Total System Revenue & Taxes
+    const payments = await Payment.findAll({ where: { status: 'success' } });
+    let totalRevenue = 0;
+    let totalTaxes = 0;
+    
+    payments.forEach(p => {
+      totalRevenue += parseFloat(p.amount) || 0;
+      totalTaxes += parseFloat(p.tax_amount) || 0;
+    });
+
+    res.json({
+      totalCompanies,
+      totalTickets,
+      totalRevenue,
+      totalTaxes
+    });
+  } catch (error) {
+    console.error('Admin dashboard stats error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 exports.createOfficialRoute = async (req, res) => {
   try {

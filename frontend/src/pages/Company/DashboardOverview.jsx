@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
   Bus, Users, TrendingUp, DollarSign, Map, Route as RouteIcon, 
   AlertTriangle, ShieldCheck, MapPin
@@ -18,6 +20,32 @@ const REVENUE_DATA = [
 ];
 
 const CompanyDashboardHome = () => {
+  const [stats, setStats] = useState({
+    totalBuses: 0,
+    totalSchedules: 0,
+    totalTickets: 0,
+    totalRevenue: 0,
+    totalTaxes: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const token = localStorage.getItem('token');
+        if (!user || user.role !== 'company_admin') return;
+        
+        const res = await axios.get(`http://127.0.0.1:5000/api/companies/${user.id}/dashboard-stats`, {
+           headers: { Authorization: `Bearer ${token}` }
+        });
+        setStats(res.data);
+      } catch (error) {
+        console.error('Failed to load company stats', error);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="space-y-6">
       
@@ -47,7 +75,7 @@ const CompanyDashboardHome = () => {
             <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">+4 active</span>
           </div>
           <span className="text-gray-500 text-sm font-medium mb-1">Total Fleet</span>
-          <span className="text-3xl font-black text-gray-800">42</span>
+          <span className="text-3xl font-black text-gray-800">{stats.totalBuses}</span>
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow">
@@ -58,7 +86,7 @@ const CompanyDashboardHome = () => {
             <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">+12%</span>
           </div>
           <span className="text-gray-500 text-sm font-medium mb-1">Tickets Sold Today</span>
-          <span className="text-3xl font-black text-gray-800">892</span>
+          <span className="text-3xl font-black text-gray-800">{stats.totalTickets}</span>
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow">
@@ -69,7 +97,7 @@ const CompanyDashboardHome = () => {
             <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-md">Peak</span>
           </div>
           <span className="text-gray-500 text-sm font-medium mb-1">Revenue Today</span>
-          <span className="text-3xl font-black text-gray-800">RWF 1.2M</span>
+          <span className="text-3xl font-black text-gray-800">RWF {stats.totalRevenue.toLocaleString()}</span>
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow relative overflow-hidden">
@@ -83,7 +111,7 @@ const CompanyDashboardHome = () => {
             <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">Gov Tax</span>
           </div>
           <span className="text-gray-500 text-sm font-medium mb-1 relative z-10">Tax Deducted (5%)</span>
-          <span className="text-3xl font-black text-slate-800 relative z-10">RWF 60K</span>
+          <span className="text-3xl font-black text-slate-800 relative z-10">RWF {stats.totalTaxes.toLocaleString()}</span>
         </div>
       </div>
 

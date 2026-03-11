@@ -4,6 +4,7 @@ const bookingController = require('../controllers/bookingController');
 const { protect } = require('../middleware/authMiddleware');
 
 router.get('/schedules/search', bookingController.searchSchedules); // Public or protect depending on needs, made public for passenger search
+router.get('/schedules/:schedule_id/seats', bookingController.getScheduleSeats);
 router.post('/', protect, bookingController.createBooking);
 router.get('/my-bookings', protect, bookingController.getUserBookings);
 router.get('/ticket/:ticket_code', protect, bookingController.getBookingDetails);

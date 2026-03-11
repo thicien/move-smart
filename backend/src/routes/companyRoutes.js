@@ -20,6 +20,7 @@ const upload = multer({ storage: storage });
 // Companies
 router.post('/', protect, authorize('company_admin', 'government'), companyController.registerCompany);
 router.get('/', protect, companyController.getCompanies);
+router.get('/:company_id/dashboard-stats', protect, authorize('company_admin'), companyController.getDashboardStats);
 
 // Buses
 router.post('/buses', protect, authorize('company_admin'), upload.single('image'), companyController.addBus);

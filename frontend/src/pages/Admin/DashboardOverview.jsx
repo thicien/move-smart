@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
   Building2, Bus, Ticket, Landmark, TrendingUp, TrendingDown,
   Activity, Clock, FileText, Download, Route as RouteIcon, Map, AlertTriangle, ShieldAlert
@@ -36,6 +37,28 @@ const DELAY_STATS = [
 const COLORS = ['#F59E0B', '#EF4444', '#3B82F6', '#64748B'];
 
 const AdminDashboardOverview = () => {
+  const [stats, setStats] = useState({
+    totalCompanies: 0,
+    totalTickets: 0,
+    totalRevenue: 0,
+    totalTaxes: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://127.0.0.1:5000/api/admin/dashboard-stats', {
+           headers: { Authorization: `Bearer ${token}` }
+        });
+        setStats(res.data);
+      } catch (error) {
+        console.error('Failed to load admin stats', error);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in font-sans">
       
@@ -74,7 +97,7 @@ const AdminDashboardOverview = () => {
           <div>
              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Companies</p>
              <div className="flex items-baseline gap-2">
-               <p className="text-2xl font-black text-slate-800 leading-none">24</p>
+               <p className="text-2xl font-black text-slate-800 leading-none">{stats.totalCompanies}</p>
                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">All Regulated</span>
              </div>
           </div>
@@ -99,7 +122,7 @@ const AdminDashboardOverview = () => {
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Tickets Sold Today</p>
             <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-black text-slate-800 leading-none">44.2k</p>
+              <p className="text-2xl font-black text-slate-800 leading-none">{stats.totalTickets}</p>
               <span className="text-[10px] font-bold text-emerald-600 flex items-center"><TrendingUp className="w-3 h-3 mr-0.5"/> 8%</span>
             </div>
           </div>
@@ -112,7 +135,7 @@ const AdminDashboardOverview = () => {
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Gross Revenue (Today)</p>
-            <p className="text-2xl font-black text-slate-800 leading-none">170M <span className="text-[10px] text-slate-400 uppercase">RWF</span></p>
+            <p className="text-2xl font-black text-slate-800 leading-none">{stats.totalRevenue.toLocaleString()} <span className="text-[10px] text-slate-400 uppercase">RWF</span></p>
           </div>
         </div>
 
@@ -126,7 +149,7 @@ const AdminDashboardOverview = () => {
           </div>
           <div className="relative z-10">
             <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-0.5">Govt Tax (5%) Auto-Deducted</p>
-            <p className="text-2xl font-black text-white leading-none">8.5M <span className="text-[10px] text-emerald-400 uppercase">RWF</span></p>
+            <p className="text-2xl font-black text-white leading-none">{stats.totalTaxes.toLocaleString()} <span className="text-[10px] text-emerald-400 uppercase">RWF</span></p>
           </div>
         </div>
 

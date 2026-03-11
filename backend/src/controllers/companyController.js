@@ -1,6 +1,53 @@
-const { Company, Bus, Route, Schedule } = require('../models');
+const { Company, Bus, Route, Schedule, Booking, Payment } = require('../models');
 
 // --- COMPANY ENDPOINTS ---
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const { company_id } = req.params;
+    
+    // Find company logic
+    const company = await Company.findOne({ where: { admin_id: company_id } });
+    if (!company) {
+      return res.status(404).json({ message: 'Company not found' });
+    }
+
+    // Get all buses for this company
+    const buses = await Bus.findAll({ where: { company_id: company.id } });
+    const busIds = buses.map(b => b.id);
+
+    // Get all schedules
+    const schedules = await Schedule.findAll({ where: { bus_id: busIds } });
+    const scheduleIds = schedules.map(s => s.id);
+
+    // Get all bookings
+    const bookings = await Booking.findAll({ where: { schedule_id: scheduleIds } });
+    const totalTickets = bookings.length;
+
+    // Get revenue from payments
+    const bookingIds = bookings.map(b => b.id);
+    const payments = await Payment.findAll({ where: { booking_id: bookingIds, status: 'success' } });
+    
+    let totalRevenue = 0;
+    let totalTaxes = 0;
+    
+    payments.forEach(p => {
+      totalRevenue += parseFloat(p.company_revenue) || 0;
+      totalTaxes += parseFloat(p.tax_amount) || 0;
+    });
+
+    res.json({
+      totalBuses: buses.length,
+      totalSchedules: schedules.length,
+      totalTickets,
+      totalRevenue,
+      totalTaxes
+    });
+  } catch (error) {
+    console.error('Company dashboard stats error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.registerCompany = async (req, res) => {
   try {
     const { name, registration_number } = req.body;

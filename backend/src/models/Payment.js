@@ -23,6 +23,16 @@ const Payment = sequelize.define('Payment', {
     type: DataTypes.ENUM('pending', 'success', 'failed'),
     defaultValue: 'pending',
   },
+  tax_amount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0,
+  },
+  company_revenue: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0,
+  },
   transaction_id: {
     type: DataTypes.STRING,
     allowNull: true,

@@ -4,6 +4,7 @@ const adminController = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 // Official Routes (Government only)
+router.get('/dashboard-stats', protect, authorize('government'), adminController.getDashboardStats);
 router.post('/routes', protect, authorize('government'), adminController.createOfficialRoute);
 router.get('/routes', protect, authorize('government', 'company_admin'), adminController.getOfficialRoutes);
 router.put('/routes/:id', protect, authorize('government'), adminController.updateOfficialRoute);

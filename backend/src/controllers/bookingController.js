@@ -7,19 +7,36 @@ exports.createBooking = async (req, res) => {
     const { schedule_id, seat_number, amount, method } = req.body;
     const user_id = req.user.id; // from auth middleware
 
+    // seat_number might be a comma-separated string like "4, 5, 6"
+    const requestedSeats = seat_number.split(',').map(s => s.trim());
+    const numSeats = requestedSeats.length;
+
     // Check if schedule exists and has available seats
     const schedule = await Schedule.findByPk(schedule_id);
-    if (!schedule || schedule.available_seats <= 0) {
-      return res.status(400).json({ message: 'Schedule not found or full' });
+    if (!schedule || schedule.available_seats < numSeats) {
+      return res.status(400).json({ message: 'Schedule not found or not enough seats' });
     }
 
-    // Check if seat is already booked
-    const existingBooking = await Booking.findOne({ where: { schedule_id, seat_number } });
-    if (existingBooking) {
-      return res.status(400).json({ message: 'Seat already booked' });
+    // Check if any of the requested seats are already booked
+    const existingBookings = await Booking.findAll({ where: { schedule_id } });
+    const bookedSeats = [];
+    existingBookings.forEach(b => {
+      // seat_number could be '1' or '1, 2'
+      const seatsInBooking = b.seat_number.split(',').map(s => s.trim());
+      bookedSeats.push(...seatsInBooking);
+    });
+
+    const isConflict = requestedSeats.some(s => bookedSeats.includes(s));
+    if (isConflict) {
+      return res.status(400).json({ message: 'One or more selected seats are already booked' });
     }
 
     const ticket_code = uuidv4().slice(0, 8).toUpperCase();
+    
+    // Tax Calculation (5% Government Tax)
+    const bookingAmount = amount || (schedule.price * numSeats);
+    const tax_amount = bookingAmount * 0.05;
+    const company_revenue = bookingAmount - tax_amount;
 
     // Create booking
     const booking = await Booking.create({
@@ -30,21 +47,43 @@ exports.createBooking = async (req, res) => {
       payment_status: 'pending'
     });
 
-    // Create payment record
+    // Create payment record with tax details
     const payment = await Payment.create({
       booking_id: booking.id,
-      amount: amount || schedule.price,
+      amount: bookingAmount,
       method,
-      status: 'pending' // pending until webhook or confirmation
+      status: 'pending', // pending until webhook or confirmation
+      tax_amount,
+      company_revenue
     });
 
     // Reduce available seats
-    schedule.available_seats -= 1;
+    schedule.available_seats -= numSeats;
     await schedule.save();
 
     res.status(201).json({ message: 'Booking created successfully', booking, payment });
   } catch (error) {
     console.error('Booking error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getScheduleSeats = async (req, res) => {
+  try {
+    const { schedule_id } = req.params;
+    const bookings = await Booking.findAll({ where: { schedule_id } });
+    
+    const bookedSeats = [];
+    bookings.forEach(b => {
+      if (b.seat_number) {
+        const seats = b.seat_number.split(',').map(s => parseInt(s.trim()));
+        bookedSeats.push(...seats);
+      }
+    });
+
+    res.json(bookedSeats);
+  } catch (error) {
+    console.error('Get seats error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

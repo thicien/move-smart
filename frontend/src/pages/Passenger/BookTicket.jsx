@@ -24,7 +24,21 @@ const BookTicket = () => {
 
   // Seat Selection State
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const mockBookedSeats = [3, 7, 8, 12, 15, 22]; // Simulated booked seats
+  const [bookedSeats, setBookedSeats] = useState([]); // Fetched from backend
+
+  const handleSelectSchedule = async (schedule) => {
+    setSelectedSchedule(schedule);
+    setStep(2); // Move to seat selection
+    
+    // Fetch booked seats for this schedule
+    try {
+      const res = await axios.get(`http://127.0.0.1:5000/api/bookings/schedules/${schedule.id}/seats`);
+      setBookedSeats(res.data);
+    } catch (err) {
+      console.error('Failed to fetch booked seats', err);
+      setBookedSeats([]); // Default to none if error
+    }
+  };
 
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -71,13 +85,10 @@ const BookTicket = () => {
     }
   };
 
-  const handleSelectSchedule = (schedule) => {
-    setSelectedSchedule(schedule);
-    setStep(2); // Move to seat selection
-  };
+
 
   const toggleSeat = (seatId) => {
-    if (mockBookedSeats.includes(seatId)) return;
+    if (bookedSeats.includes(seatId)) return;
     
     if (selectedSeats.includes(seatId)) {
       setSelectedSeats(selectedSeats.filter(s => s !== seatId));
@@ -303,7 +314,7 @@ const BookTicket = () => {
                <div className="grid grid-cols-4 gap-x-8 gap-y-4">
                   {Array.from({ length: 30 }).map((_, i) => {
                     const seatNum = i + 1;
-                    const isBooked = mockBookedSeats.includes(seatNum);
+                    const isBooked = bookedSeats.includes(seatNum);
                     const isSelected = selectedSeats.includes(seatNum);
                     
                     return (
