@@ -1,0 +1,27 @@
+[
+  {
+    "email": "test_1772716951332@example.com",
+    "password": "password",
+    "role": "passenger"
+  },
+  {
+    "email": "mugishathicien04@gmail.com",
+    "password": "password",
+    "role": "passenger"
+  },
+  {
+    "email": "admin@gmail.com",
+    "password": "password",
+    "role": "company_admin"
+  },
+  {
+    "email": "admin@gov.rw",
+    "password": "password",
+    "role": "government"
+  },
+  {
+    "email": "mugishathicien@gmail.com",
+    "password": "password",
+    "role": "passenger"
+  }
+]
