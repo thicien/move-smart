@@ -35,6 +35,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Bus Tracking System API is running' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const { sequelize } = require('./src/models');
+
+sequelize.sync()
+  .then(() => {
+    console.log('Database connected successfully.');
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Unable to connect to the database:', error);
+  });
