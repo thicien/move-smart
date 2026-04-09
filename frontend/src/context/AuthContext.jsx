@@ -36,9 +36,11 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, user: res.data.user };
     } catch (error) {
+      const errorMessage = error.response?.data?.message || 
+                          (error.request ? 'Network Error: Cannot reach backend server' : 'Login failed');
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Login failed' 
+        message: errorMessage
       };
     }
   };
