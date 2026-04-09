@@ -8,19 +8,27 @@ import axios from 'axios';
 
 const FarePricing = () => {
   const [routes, setRoutes] = useState([]);
+  const [tariffs, setTariffs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showTariffModal, setShowTariffModal] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState(null);
 
-  const fetchRoutes = async () => {
+  const fetchRoutesAndTariffs = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res = await axios.get('http://127.0.0.1:5000/api/admin/routes', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setRoutes(res.data);
+      const [resRoutes, resTariffs] = await Promise.all([
+        axios.get('http://127.0.0.1:5000/api/admin/routes', {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get('http://127.0.0.1:5000/api/admin/tariffs', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      setRoutes(resRoutes.data);
+      setTariffs(resTariffs.data);
     } catch (error) {
       console.error('Failed to fetch routes:', error);
     } finally {
@@ -29,7 +37,7 @@ const FarePricing = () => {
   };
 
   useEffect(() => {
-    fetchRoutes();
+    fetchRoutesAndTariffs();
   }, []);
 
   const handleEdit = (route) => {
@@ -53,12 +61,36 @@ const FarePricing = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setShowConfigModal(false);
-      fetchRoutes();
+      fetchRoutesAndTariffs();
     } catch (error) {
       console.error('Failed to update policy:', error);
       alert(error.response?.data?.message || 'Failed to update policy');
     }
   };
+
+      const handleUpdateTariffs = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await Promise.all(tariffs.map(t => 
+        axios.put(`http://127.0.0.1:5000/api/admin/tariffs/${t.id}`, {
+          rate_per_km: t.rate_per_km,
+          minimum_fare: t.minimum_fare,
+          tax_percentage: t.tax_percentage
+        }, { headers: { Authorization: `Bearer ${token}` } })
+      ));
+      setShowTariffModal(false);
+      fetchRoutesAndTariffs();
+      alert('RURA Tariffs updated successfully.');
+    } catch (error) {
+      console.error('Failed to update tariffs:', error);
+      alert('Failed to update tariffs');
+    }
+  };
+
+  const handleTariffChange = (id, field, value) => {
+    setTariffs(tariffs.map(t => t.id === id ? { ...t, [field]: parseFloat(value) || 0 } : t));
+  };
+
 
   return (
     <div className="space-y-6 animate-fade-in font-sans">
@@ -72,8 +104,10 @@ const FarePricing = () => {
           <p className="text-slate-500 text-sm mt-1 font-medium">Define legal price boundaries and government deduction percentages per corridor.</p>
         </div>
         <div className="flex gap-3">
-           <button className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md transition-colors flex items-center gap-2">
-            <Settings className="w-4 h-4" /> Global Tax Rules
+           <button 
+             onClick={() => setShowTariffModal(true)}
+             className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md transition-colors flex items-center gap-2">
+            <Settings className="w-4 h-4" /> National Tariffs & Rules
           </button>
         </div>
       </div>
@@ -251,6 +285,63 @@ const FarePricing = () => {
                 className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-lg shadow-md transition-colors text-sm flex items-center gap-2"
               >
                 Enforce Policy Update
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* National Tariffs Modal */}
+      {showTariffModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col">
+            
+            <div className="p-6 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-emerald-400" /> 
+                  RURA Official Tariffs Setting
+                </h3>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Configure global flat rates per KM logic</p>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+               {tariffs.map((tariff) => (
+                 <div key={tariff.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-sm border-b border-slate-200 pb-2">{tariff.category.replace('_', ' ')} SETTINGS</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                       <div>
+                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Rate Per KM (RWF)</label>
+                         <input type="number" step="0.01" value={tariff.rate_per_km} onChange={(e) => handleTariffChange(tariff.id, 'rate_per_km', e.target.value)} className="w-full p-2.5 border border-emerald-300 bg-emerald-50 text-emerald-800 rounded-lg text-lg font-black focus:outline-none" />
+                       </div>
+                       <div>
+                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Absolute Minimum Fare</label>
+                         <input type="number" value={tariff.minimum_fare} onChange={(e) => handleTariffChange(tariff.id, 'minimum_fare', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-lg text-lg font-bold text-slate-700 focus:outline-none" />
+                       </div>
+                       <div>
+                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Default Tax %</label>
+                         <input type="number" value={tariff.tax_percentage} onChange={(e) => handleTariffChange(tariff.id, 'tax_percentage', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-lg text-lg font-bold text-slate-700 focus:outline-none" />
+                       </div>
+                    </div>
+                 </div>
+               ))}
+               {!tariffs.length && <p>No tariffs configured on server.</p>}
+            </div>
+
+            <div className="p-6 border-t border-slate-200 bg-slate-50 flex justify-end gap-3 shrink-0">
+              <button 
+                onClick={() => setShowTariffModal(false)}
+                className="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-lg transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleUpdateTariffs}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-lg shadow-md transition-colors text-sm flex items-center gap-2"
+              >
+                Save Official Tariffs
               </button>
             </div>
 

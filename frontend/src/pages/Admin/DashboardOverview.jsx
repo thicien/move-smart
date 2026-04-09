@@ -44,19 +44,37 @@ const AdminDashboardOverview = () => {
     totalTaxes: 0
   });
 
+  const [pulse, setPulse] = useState({
+    total_active_buses: 0,
+    total_tickets_sold: 0,
+    active_high_alerts: 0
+  });
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://127.0.0.1:5000/api/admin/dashboard-stats', {
-           headers: { Authorization: `Bearer ${token}` }
-        });
-        setStats(res.data);
+        const [statsRes, pulseRes] = await Promise.all([
+          axios.get('http://127.0.0.1:5000/api/admin/dashboard-stats', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://127.0.0.1:5000/api/admin/national-overview', {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ]);
+        setStats(statsRes.data);
+        setPulse(pulseRes.data);
       } catch (error) {
-        console.error('Failed to load admin stats', error);
+        console.error('Failed to load admin stats/pulse', error);
       }
     };
     fetchStats();
+    
+    // Polling Every 60 Seconds for Pulse Data
+    const interval = setInterval(() => {
+      fetchStats();
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -109,8 +127,8 @@ const AdminDashboardOverview = () => {
             <Bus className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Buses Running</p>
-            <p className="text-2xl font-black text-slate-800 leading-none">842 <span className="text-sm text-slate-400">/ 915</span></p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Buses Running (Pulse)</p>
+            <p className="text-2xl font-black text-slate-800 leading-none">{pulse.total_active_buses}</p>
           </div>
         </div>
 
@@ -120,10 +138,10 @@ const AdminDashboardOverview = () => {
             <Ticket className="w-5 h-5 text-indigo-600" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Tickets Sold Today</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Tickets Sold (Pulse)</p>
             <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-black text-slate-800 leading-none">{stats.totalTickets}</p>
-              <span className="text-[10px] font-bold text-emerald-600 flex items-center"><TrendingUp className="w-3 h-3 mr-0.5"/> 8%</span>
+              <p className="text-2xl font-black text-slate-800 leading-none">{pulse.total_tickets_sold}</p>
+              <span className="text-[10px] font-bold text-emerald-600 flex items-center"><TrendingUp className="w-3 h-3 mr-0.5"/> Live</span>
             </div>
           </div>
         </div>
@@ -170,8 +188,8 @@ const AdminDashboardOverview = () => {
             <ShieldAlert className="w-5 h-5 text-red-600" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Price Violations</p>
-            <p className="text-2xl font-black text-red-600 leading-none">12 <span className="text-[10px] text-slate-400 font-medium">Action Needed</span></p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">High Severity Alerts</p>
+            <p className="text-2xl font-black text-red-600 leading-none">{pulse.active_high_alerts} <span className="text-[10px] text-slate-400 font-medium">Action Needed</span></p>
           </div>
         </div>
       </div>

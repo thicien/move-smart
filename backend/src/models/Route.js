@@ -24,6 +24,18 @@ const Route = sequelize.define('Route', {
     type: DataTypes.ENUM('Active', 'Suspended'),
     defaultValue: 'Active',
   },
+  route_type: {
+    type: DataTypes.ENUM('Intercity', 'Intracity', 'Secondary'),
+    allowNull: true,
+  },
+  via: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  path_geometry: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
   origin: {
     type: DataTypes.STRING,
     allowNull: false,

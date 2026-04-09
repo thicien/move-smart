@@ -1,0 +1,7 @@
+Error
+    at Query.run (D:\MoveSmart\backend\node_modules\sequelize\lib\dialects\mysql\query.js:52:25)
+    at D:\MoveSmart\backend\node_modules\sequelize\lib\sequelize.js:315:28
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async MySQLQueryInterface.upsert (D:\MoveSmart\backend\node_modules\sequelize\lib\dialects\mysql\query-interface.js:43:12)
+    at async Route.upsert (D:\MoveSmart\backend\node_modules\sequelize\lib\model.js:1533:20)
+    at async seed (D:\MoveSmart\backend\test_upsert.js:8:5)

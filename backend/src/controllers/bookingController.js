@@ -1,4 +1,5 @@
 const { Booking, Schedule, Payment, Bus, Route, Company } = require('../models');
+const { calculateFees } = require('../utils/feeCalculator');
 const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 
@@ -33,10 +34,9 @@ exports.createBooking = async (req, res) => {
 
     const ticket_code = uuidv4().slice(0, 8).toUpperCase();
     
-    // Tax Calculation (5% Government Tax)
+    // Tax Calculation (5% Government Tax) via server-side FeeCalculator Service
     const bookingAmount = amount || (schedule.price * numSeats);
-    const tax_amount = bookingAmount * 0.05;
-    const company_revenue = bookingAmount - tax_amount;
+    const { systemRevenue, companyShare } = calculateFees(bookingAmount);
 
     // Create booking
     const booking = await Booking.create({
@@ -53,8 +53,8 @@ exports.createBooking = async (req, res) => {
       amount: bookingAmount,
       method,
       status: 'pending', // pending until webhook or confirmation
-      tax_amount,
-      company_revenue
+      tax_amount: systemRevenue,
+      company_revenue: companyShare
     });
 
     // Reduce available seats

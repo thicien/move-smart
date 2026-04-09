@@ -1,4 +1,5 @@
-const { Route, Company, Booking, Payment, sequelize } = require('../models');
+const { Route, Company, Booking, Payment, NationalMetric, TariffSetting, sequelize } = require('../models');
+const { calculateMaxRuraFare } = require('../utils/fareCalculator');
 
 // --- GOVERNMENT / ADMIN ROUTE ENDPOINTS ---
 
@@ -11,7 +12,11 @@ exports.getDashboardStats = async (req, res) => {
     const totalTickets = await Booking.count();
     
     // Total System Revenue & Taxes
-    const payments = await Payment.findAll({ where: { status: 'success' } });
+    const payments = await Payment.findAll({ 
+      where: { 
+        status: { [sequelize.Op.ne]: 'failed' } 
+      } 
+    });
     let totalRevenue = 0;
     let totalTaxes = 0;
     
@@ -32,13 +37,41 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
+exports.getNationalOverview = async (req, res) => {
+  try {
+    const latestMetric = await NationalMetric.findOne({
+      order: [['timestamp', 'DESC']]
+    });
+
+    if (!latestMetric) {
+      return res.json({
+        total_active_buses: 0,
+        total_tickets_sold: 0,
+        active_high_alerts: 0,
+        timestamp: new Date()
+      });
+    }
+
+    res.json(latestMetric);
+  } catch (error) {
+    console.error('National overview error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.createOfficialRoute = async (req, res) => {
   try {
-    const { code, name, origin, destination, distance, estimated_duration, status } = req.body;
+    const { code, name, origin, destination, distance, estimated_duration, status, route_type, via } = req.body;
 
     const existingRoute = await Route.findOne({ where: { code } });
     if (existingRoute) {
       return res.status(400).json({ message: 'A route with this code already exists' });
+    }
+
+    let base_fare = 0;
+    if (distance && distance > 0) {
+       const rType = route_type || 'Intercity';
+       base_fare = await calculateMaxRuraFare(rType, distance);
     }
 
     const route = await Route.create({
@@ -48,6 +81,11 @@ exports.createOfficialRoute = async (req, res) => {
       destination,
       distance,
       estimated_duration,
+      route_type,
+      via,
+      base_fare,
+      min_fare: base_fare,
+      max_fare: base_fare,
       status: status || 'Active',
       company_id: null, // Official routes don't belong to a single company
     });
@@ -79,8 +117,7 @@ exports.updateOfficialRoute = async (req, res) => {
   try {
     const { id } = req.params;
     const { 
-      code, name, origin, destination, distance, estimated_duration, status,
-      base_fare, min_fare, max_fare, tax_percentage
+      code, name, origin, destination, distance, estimated_duration, status, route_type, via, tax_percentage
     } = req.body;
 
     const route = await Route.findOne({ where: { id, company_id: null } });
@@ -96,6 +133,12 @@ exports.updateOfficialRoute = async (req, res) => {
       }
     }
 
+    let base_fare = route.base_fare;
+    if (distance && distance > 0) {
+       const rType = route_type || route.route_type || 'Intercity';
+       base_fare = await calculateMaxRuraFare(rType, distance);
+    }
+
     await route.update({
       code,
       name,
@@ -104,9 +147,11 @@ exports.updateOfficialRoute = async (req, res) => {
       distance,
       estimated_duration,
       status,
+      route_type,
+      via,
       base_fare,
-      min_fare,
-      max_fare,
+      min_fare: base_fare,
+      max_fare: base_fare,
       tax_percentage
     });
 
@@ -152,6 +197,31 @@ exports.updateRouteStatus = async (req, res) => {
     res.json({ message: `Route ${status.toLowerCase()} successfully`, route });
   } catch (error) {
     console.error('Update status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getTariffs = async (req, res) => {
+  try {
+    const tariffs = await TariffSetting.findAll();
+    res.json(tariffs);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateTariff = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rate_per_km, minimum_fare, tax_percentage } = req.body;
+
+    const tariff = await TariffSetting.findByPk(id);
+    if (!tariff) return res.status(404).json({ message: 'Tariff Setting not found' });
+
+    await tariff.update({ rate_per_km, minimum_fare, tax_percentage });
+    res.json({ message: 'Tariff updated successfully', tariff });
+  } catch (error) {
+    console.error('Update tariff error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

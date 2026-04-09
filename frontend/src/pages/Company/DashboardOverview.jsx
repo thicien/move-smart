@@ -24,6 +24,7 @@ const CompanyDashboardHome = () => {
     totalBuses: 0,
     totalSchedules: 0,
     totalTickets: 0,
+    totalGrossRevenue: 0,
     totalRevenue: 0,
     totalTaxes: 0
   });
@@ -66,7 +67,7 @@ const CompanyDashboardHome = () => {
       </div>
 
       {/* Hero Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
@@ -91,27 +92,19 @@ const CompanyDashboardHome = () => {
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
-            <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-orange-500" />
+            <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
+               <DollarSign className="w-5 h-5 text-emerald-600" />
             </div>
-            <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-md">Peak</span>
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-md">100% Transparent</span>
           </div>
-          <span className="text-gray-500 text-sm font-medium mb-1">Revenue Today</span>
-          <span className="text-3xl font-black text-gray-800">RWF {stats.totalRevenue.toLocaleString()}</span>
-        </div>
-
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow relative overflow-hidden">
-          <div className="absolute -right-4 -bottom-4 opacity-5">
-            <ShieldCheck className="w-32 h-32" />
+          <span className="text-gray-500 text-sm font-medium mb-1">Company Net Earnings (95%)</span>
+          <span className="text-3xl font-black text-gray-800">RWF {(stats.totalRevenue || 0).toLocaleString()}</span>
+          
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-gray-500">
+             <span>Gross: {(stats.totalGrossRevenue || 0).toLocaleString()}</span>
+             <span className="text-orange-500">Fee: {(stats.totalTaxes || 0).toLocaleString()}</span>
+             <span className="text-emerald-600">Net: {(stats.totalRevenue || 0).toLocaleString()}</span>
           </div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-slate-700" />
-            </div>
-            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">Gov Tax</span>
-          </div>
-          <span className="text-gray-500 text-sm font-medium mb-1 relative z-10">Tax Deducted (5%)</span>
-          <span className="text-3xl font-black text-slate-800 relative z-10">RWF {stats.totalTaxes.toLocaleString()}</span>
         </div>
       </div>
 

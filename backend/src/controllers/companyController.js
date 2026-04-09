@@ -1,4 +1,5 @@
 const { Company, Bus, Route, Schedule, Booking, Payment } = require('../models');
+const { calculateMaxRuraFare } = require('../utils/fareCalculator');
 
 // --- COMPANY ENDPOINTS ---
 exports.getDashboardStats = async (req, res) => {
@@ -25,12 +26,21 @@ exports.getDashboardStats = async (req, res) => {
 
     // Get revenue from payments
     const bookingIds = bookings.map(b => b.id);
-    const payments = await Payment.findAll({ where: { booking_id: bookingIds, status: 'success' } });
+    const { Op } = require('sequelize');
+    const payments = await Payment.findAll({ 
+      where: { 
+        booking_id: bookingIds, 
+        status: { [Op.ne]: 'failed' } 
+      } 
+    });
     
-    let totalRevenue = 0;
+    let totalRevenue = 0; // Net
     let totalTaxes = 0;
+    let totalGrossRevenue = 0;
     
     payments.forEach(p => {
+      const pAmount = parseFloat(p.amount) || 0;
+      totalGrossRevenue += pAmount;
       totalRevenue += parseFloat(p.company_revenue) || 0;
       totalTaxes += parseFloat(p.tax_amount) || 0;
     });
@@ -39,6 +49,7 @@ exports.getDashboardStats = async (req, res) => {
       totalBuses: buses.length,
       totalSchedules: schedules.length,
       totalTickets,
+      totalGrossRevenue,
       totalRevenue,
       totalTaxes
     });
@@ -97,13 +108,16 @@ exports.addBus = async (req, res) => {
       image_url = `/uploads/buses/${req.file.filename}`;
     }
 
-    // Validate seat price against route max_fare if route_id is provided
+    // Validate seat price against RURA dynamically
     if (route_id && seat_price) {
       const route = await Route.findByPk(route_id);
-      if (route && route.max_fare > 0 && parseFloat(seat_price) > route.max_fare) {
-        return res.status(400).json({ 
-          message: `Price too high! The government has set a maximum legal fare of ${route.max_fare} RWF for this route.` 
-        });
+      if (route && route.distance > 0) {
+        const legalMax = await calculateMaxRuraFare(route.route_type, route.distance);
+        if (parseFloat(seat_price) > legalMax) {
+          return res.status(400).json({ 
+            message: `Price exceeds RURA limit! The maximum legally permitted fare for this route is ${legalMax} RWF.` 
+          });
+        }
       }
     }
 
@@ -139,13 +153,16 @@ exports.updateBus = async (req, res) => {
     const bus = await Bus.findByPk(id);
     if (!bus) return res.status(404).json({ message: 'Bus not found' });
 
-    // Validate seat price against route max_fare if route_id is provided
+    // Validate seat price against RURA dynamically
     if (route_id && seat_price) {
       const route = await Route.findByPk(route_id);
-      if (route && route.max_fare > 0 && parseFloat(seat_price) > route.max_fare) {
-         return res.status(400).json({ 
-          message: `Price too high! The government has set a maximum legal fare of ${route.max_fare} RWF for this route.` 
-        });
+      if (route && route.distance > 0) {
+        const legalMax = await calculateMaxRuraFare(route.route_type, route.distance);
+        if (parseFloat(seat_price) > legalMax) {
+          return res.status(400).json({ 
+            message: `Price exceeds RURA limit! The maximum legally permitted fare for this route is ${legalMax} RWF.` 
+          });
+        }
       }
     }
 
@@ -213,16 +230,29 @@ exports.getCompanyBuses = async (req, res) => {
 // --- ROUTE ENDPOINTS ---
 exports.addRoute = async (req, res) => {
   try {
-    const { company_id, origin, destination, distance, estimated_duration } = req.body;
+    const { company_id, origin, destination, distance, estimated_duration, route_type, via } = req.body;
+
+    let base_fare = 0;
+    if (distance && distance > 0) {
+       // Automatically determine price without manual entry
+       // Fallback to 'INTERCITY' if route_type is unspecified
+       const rType = route_type || 'Intercity';
+       base_fare = await calculateMaxRuraFare(rType, distance);
+    }
 
     const route = await Route.create({
       company_id,
       origin,
       destination,
       distance,
-      estimated_duration
+      estimated_duration,
+      route_type,
+      via,
+      base_fare,
+      min_fare: base_fare, // Set to standard calculation automatically
+      max_fare: base_fare
     });
-    res.status(201).json({ message: 'Route added', route });
+    res.status(201).json({ message: 'Route automatically priced and added', route });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -241,19 +271,29 @@ exports.getCompanyRoutes = async (req, res) => {
 // --- SCHEDULE ENDPOINTS ---
 exports.addSchedule = async (req, res) => {
   try {
-    const { bus_id, route_id, departure_time, arrival_time, price, available_seats, driver_name, driver_phone } = req.body;
+    const { bus_id, route_id, departure_time, arrival_time, available_seats, driver_name, driver_phone } = req.body;
+
+    const route = await Route.findByPk(route_id);
+    if (!route) return res.status(404).json({ message: 'Route not found' });
+    
+    let generatedPrice = 0;
+    if (route.distance > 0) {
+       // Auto-calculate the ticket price based on the inserted kilometers for the route!
+       const rType = route.route_type || 'Intercity';
+       generatedPrice = await calculateMaxRuraFare(rType, route.distance);
+    }
 
     const schedule = await Schedule.create({
       bus_id,
       route_id,
       departure_time,
       arrival_time,
-      price,
+      price: generatedPrice,
       available_seats,
       driver_name,
       driver_phone
     });
-    res.status(201).json({ message: 'Schedule added', schedule });
+    res.status(201).json({ message: 'Schedule auto-priced and added', schedule });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -291,23 +331,33 @@ exports.getSchedules = async (req, res) => {
 exports.updateSchedule = async (req, res) => {
   try {
     const { id } = req.params;
-    const { bus_id, route_id, departure_time, arrival_time, price, available_seats, driver_name, driver_phone } = req.body;
+    const { bus_id, route_id, departure_time, arrival_time, available_seats, driver_name, driver_phone } = req.body;
     
     const schedule = await Schedule.findByPk(id);
     if (!schedule) return res.status(404).json({ message: 'Schedule not found' });
+
+    let generatedPrice = schedule.price;
+
+    if (route_id) {
+       const route = await Route.findByPk(route_id);
+       if (route && route.distance > 0) {
+         const rType = route.route_type || 'Intercity';
+         generatedPrice = await calculateMaxRuraFare(rType, route.distance);
+       }
+    }
 
     await schedule.update({
       bus_id,
       route_id,
       departure_time,
       arrival_time,
-      price,
+      price: generatedPrice,
       available_seats,
       driver_name,
       driver_phone
     });
 
-    res.json({ message: 'Schedule updated successfully', schedule });
+    res.json({ message: 'Schedule auto-priced and updated successfully', schedule });
   } catch (error) {
     console.error('Update schedule error:', error);
     res.status(500).json({ message: 'Server error' });

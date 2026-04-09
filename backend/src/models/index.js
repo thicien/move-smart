@@ -6,6 +6,9 @@ const Route = require('./Route');
 const Schedule = require('./Schedule');
 const Booking = require('./Booking');
 const Payment = require('./Payment');
+const Alert = require('./Alert');
+const NationalMetric = require('./NationalMetric');
+const TariffSetting = require('./TariffSetting');
 
 // Associations
 User.hasMany(Company, { foreignKey: 'admin_id' });
@@ -35,6 +38,12 @@ Booking.belongsTo(Schedule, { foreignKey: 'schedule_id' });
 Booking.hasOne(Payment, { foreignKey: 'booking_id' });
 Payment.belongsTo(Booking, { foreignKey: 'booking_id' });
 
+Company.hasMany(Alert, { foreignKey: 'company_id' });
+Alert.belongsTo(Company, { foreignKey: 'company_id' });
+
+Bus.hasMany(Alert, { foreignKey: 'bus_id' });
+Alert.belongsTo(Bus, { foreignKey: 'bus_id' });
+
 module.exports = {
   sequelize,
   User,
@@ -44,4 +53,7 @@ module.exports = {
   Schedule,
   Booking,
   Payment,
+  Alert,
+  NationalMetric,
+  TariffSetting,
 };
