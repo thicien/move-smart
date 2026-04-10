@@ -54,6 +54,7 @@ sequelize.sync()
         ]).then(() => console.log('Seeded default RURA Tariffs.'));
       }
     });
+    
 
     // Start background services
     const pulseService = require('./src/services/pulseService');
