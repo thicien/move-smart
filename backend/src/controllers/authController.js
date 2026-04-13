@@ -51,17 +51,27 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    console.log('Login attempt:', { email, password });
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    email = email.trim().toLowerCase();
+    password = password.trim();
 
     // Find user
     const user = await User.findOne({ where: { email } });
     if (!user) {
+      console.log(`Login failed: User not found with email ${email}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     // Check password (plaintext comparison as requested)
     const isMatch = password === user.password;
     if (!isMatch) {
+      console.log(`Login failed: Password mismatch for ${email}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
@@ -69,7 +79,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET || 'your_super_secret_jwt_key',
-      { expiresIn: '1d' }
+      { expiresIn: '365d' }
     );
 
     res.json({

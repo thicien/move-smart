@@ -60,6 +60,47 @@ sequelize.sync()
     const pulseService = require('./src/services/pulseService');
     pulseService.start();
 
+    // Ensure default admin users exist
+    const { User } = require('./src/models');
+    const ensureDefaultUsers = async () => {
+      try {
+        // Default Government Admin
+        let govAdmin = await User.findOne({ where: { email: 'admin@gov.rw' } });
+        if (!govAdmin) {
+          await User.create({
+            name: 'Government Admin',
+            email: 'admin@gov.rw',
+            password: 'password123',
+            role: 'government',
+            phone: '0000000000'
+          });
+          console.log('✅ Default government admin created (admin@gov.rw / password123)');
+        } else if (govAdmin.role !== 'government' || govAdmin.password !== 'password123') {
+          await govAdmin.update({ role: 'government', password: 'password123' });
+          console.log('✅ Restored default credentials for admin@gov.rw');
+        }
+
+        // Default System Admin
+        let systemAdmin = await User.findOne({ where: { email: 'admin@movesmart.com' } });
+        if (!systemAdmin) {
+          await User.create({
+            name: 'System Administrator',
+            email: 'admin@movesmart.com',
+            password: 'adminpassword',
+            role: 'system_admin',
+            phone: '1111111111'
+          });
+          console.log('✅ Default system admin created (admin@movesmart.com / adminpassword)');
+        } else if (systemAdmin.role !== 'system_admin' || systemAdmin.password !== 'adminpassword') {
+          await systemAdmin.update({ role: 'system_admin', password: 'adminpassword' });
+          console.log('✅ Restored default credentials for admin@movesmart.com');
+        }
+      } catch (err) {
+        console.error('Error seeding default users:', err);
+      }
+    };
+    ensureDefaultUsers();
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
