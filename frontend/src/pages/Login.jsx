@@ -26,6 +26,7 @@ const Login = () => {
     setError('');
     setLoading(true);
     
+    console.log('Frontend Sending:', { email, password });
     const result = await login(email, password);
     
     if (result.success) {
