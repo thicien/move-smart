@@ -48,9 +48,9 @@ sequelize.sync()
     TariffSetting.count().then(count => {
       if (count === 0) {
         TariffSetting.bulkCreate([
-          { category: 'URBAN_KIGALI', rate_per_km: 59.28, minimum_fare: 200 },
-          { category: 'INTERCITY', rate_per_km: 41.58, minimum_fare: 0 },
-          { category: 'SECONDARY', rate_per_km: 41.58, minimum_fare: 0 }
+          { category: 'URBAN_KIGALI', rate_per_km: 41.58, minimum_fare: 200 },
+          { category: 'INTERCITY', rate_per_km: 59.28, minimum_fare: 0 },
+          { category: 'SECONDARY', rate_per_km: 59.28, minimum_fare: 0 }
         ]).then(() => console.log('Seeded default RURA Tariffs.'));
       }
     });
