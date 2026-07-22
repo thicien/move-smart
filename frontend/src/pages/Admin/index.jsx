@@ -10,7 +10,6 @@ import TransportAnalytics from './TransportAnalytics';
 import ReportsExports from './ReportsExports';
 import SystemSettings from './SystemSettings';
 
-
 export {
   AdminLayout,
   DashboardOverview,
