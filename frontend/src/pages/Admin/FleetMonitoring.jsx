@@ -22,7 +22,6 @@ const FleetMonitoring = () => {
     <div className="h-[calc(100vh-6rem)] -m-4 md:-m-6 lg:-m-8 flex flex-col md:flex-row relative font-sans overflow-hidden bg-slate-900 animate-fade-in">
       
       <div className="flex-1 relative z-0">
-        {/* Placeholder Map Background */}
         <div className="absolute inset-0 opacity-30 mix-blend-luminosity bg-[url('https://maps.wikimedia.org/osm-intl/12/2402/1534.png')] bg-cover bg-center transition-all duration-1000"></div>
         
         {/* Map Overlays & Controls */}
