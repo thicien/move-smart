@@ -24,7 +24,6 @@ const FleetMonitoring = () => {
       <div className="flex-1 relative z-0">
         <div className="absolute inset-0 opacity-30 mix-blend-luminosity bg-[url('https://maps.wikimedia.org/osm-intl/12/2402/1534.png')] bg-cover bg-center transition-all duration-1000"></div>
         
-        {/* Map Overlays & Controls */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10 pointer-events-none">
           <div className="bg-slate-900/90 backdrop-blur-md p-4 rounded-xl shadow-lg border border-slate-700 pointer-events-auto w-80">
             <h3 className="text-white font-bold text-lg flex items-center gap-2">
