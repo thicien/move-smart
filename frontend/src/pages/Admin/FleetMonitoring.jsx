@@ -40,7 +40,6 @@ const FleetMonitoring = () => {
               />
             </div>
 
-            {/* Quick Filters */}
             <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-bold">
               <button onClick={() => setFilter('All')} className={`py-1.5 rounded border transition-colors ${filter === 'All' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-800 border-transparent text-slate-400 hover:bg-slate-700'}`}>All (842)</button>
               <button onClick={() => setFilter('On Schedule')} className={`py-1.5 rounded border transition-colors flex items-center justify-center gap-1 ${filter === 'On Schedule' ? 'bg-emerald-900/50 border-emerald-500/50 text-emerald-400' : 'bg-slate-800 border-transparent text-slate-400 hover:bg-slate-700'}`}><div className="w-2 h-2 rounded-full bg-emerald-500"></div> On Time</button>
