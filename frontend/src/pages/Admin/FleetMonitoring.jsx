@@ -72,7 +72,6 @@ const FleetMonitoring = () => {
               <div className="w-2 h-2 bg-white rounded-full"></div>
             </div>
             
-            {/* Tooltip on hover */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-slate-700">
               {bus.plate}
             </div>
