@@ -125,7 +125,6 @@ const FleetMonitoring = () => {
                 </div>
               </div>
 
-              {/* Schedule Info */}
               <div>
                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-slate-800 pb-2">Schedule Adherence</h4>
                 <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
