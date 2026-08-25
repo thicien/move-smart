@@ -144,7 +144,6 @@ const FleetMonitoring = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="pt-4 border-t border-slate-800 space-y-2">
                 <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg transition-colors text-sm shadow-lg shadow-emerald-900/20">
                   View Full Manifest
