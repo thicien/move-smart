@@ -79,7 +79,6 @@ const FleetMonitoring = () => {
         ))}
       </div>
 
-      {/* Side Panel (Bus Details) */}
       <div className={`w-full md:w-96 bg-slate-950 border-t md:border-t-0 md:border-l border-slate-800 flex flex-col transition-all duration-300 z-20 ${selectedBus ? 'translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full absolute right-0 inset-y-0 h-full'}`}>
         {selectedBus && (
           <>
