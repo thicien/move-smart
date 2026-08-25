@@ -95,8 +95,7 @@ const FleetMonitoring = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-thin scrollbar-thumb-slate-700">
-              
-              {/* Telemetry */}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl">
                   <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">Current Speed</p>
