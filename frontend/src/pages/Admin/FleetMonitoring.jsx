@@ -58,7 +58,6 @@ const FleetMonitoring = () => {
           </div>
         </div>
 
-        {/* Map Pins */}
         {filteredBuses.map((bus) => (
           <div 
             key={bus.id} 
