@@ -107,7 +107,6 @@ const FleetMonitoring = () => {
                 </div>
               </div>
 
-              {/* Journey details */}
               <div>
                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-slate-800 pb-2">Journey Details</h4>
                 <div className="space-y-3">
