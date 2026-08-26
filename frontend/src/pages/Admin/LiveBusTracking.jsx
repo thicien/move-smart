@@ -139,7 +139,6 @@ const LiveBusTracking = () => {
               }}
             >
               <div className="relative group cursor-pointer" onClick={() => setSelectedBus(bus)}>
-                {/* Ping Animation for active bus */}
                 {selectedBus?.id === bus.id && (
                   <div className={`absolute -inset-2 rounded-full animate-ping opacity-75 ${bus.color}`}></div>
                 )}
