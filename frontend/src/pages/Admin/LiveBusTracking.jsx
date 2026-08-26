@@ -124,7 +124,6 @@ const LiveBusTracking = () => {
            </button>
         </div>
 
-        {/* Simulated Map Background */}
         <div className="absolute inset-0 opacity-60 mix-blend-luminosity bg-[url('https://maps.wikimedia.org/osm-intl/12/2402/1534.png')] bg-cover bg-center"></div>
         
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/80 via-transparent to-transparent pointer-events-none z-10"></div>
