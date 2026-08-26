@@ -94,7 +94,6 @@ const LiveBusTracking = () => {
           </div>
         )}
 
-        {/* Fleet List Overview */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Live Fleet Index</p>
            {MOCK_FLEET.map(bus => (
