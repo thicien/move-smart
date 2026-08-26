@@ -147,7 +147,6 @@ const LiveBusTracking = () => {
                    <Bus className="w-3.5 h-3.5 text-white" />
                 </div>
 
-                {/* Tooltip Hover */}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-lg border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity font-bold uppercase tracking-widest pointer-events-none">
                   {bus.plate} • {bus.speed}
                 </div>
