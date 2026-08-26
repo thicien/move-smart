@@ -128,7 +128,6 @@ const LiveBusTracking = () => {
         
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/80 via-transparent to-transparent pointer-events-none z-10"></div>
 
-        {/* GPS Markers Layer */}
         <div className="absolute inset-0 z-20 overflow-hidden">
           {MOCK_FLEET.map((bus, idx) => (
             <div 
