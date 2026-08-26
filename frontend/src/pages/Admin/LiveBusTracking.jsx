@@ -143,7 +143,6 @@ const LiveBusTracking = () => {
                   <div className={`absolute -inset-2 rounded-full animate-ping opacity-75 ${bus.color}`}></div>
                 )}
                 
-                {/* Marker */}
                 <div className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-2xl border-4 border-white ${bus.color}`}>
                    <Bus className="w-3.5 h-3.5 text-white" />
                 </div>
