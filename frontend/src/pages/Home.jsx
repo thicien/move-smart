@@ -24,7 +24,6 @@ const Home = () => {
             Book your tickets easily, track your bus in real-time, and experience hassle-free urban and intercity travel.
           </p>
 
-          {/* Search Box */}
           <div className="bg-white text-brand-dark p-4 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col md:flex-row gap-4 items-center">
             
             {/* Origin */}
