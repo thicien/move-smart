@@ -3,7 +3,6 @@ import { MapPin, Calendar, Search } from 'lucide-react';
 const Home = () => {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
       <section className="relative bg-brand-blue text-white py-20 lg:py-32 overflow-hidden">
         {/* Abstract Background Design */}
         <div className="absolute inset-0 opacity-10">
