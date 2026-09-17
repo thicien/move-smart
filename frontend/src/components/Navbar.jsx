@@ -52,7 +52,6 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-16 left-0 right-0 bg-brand-blue border-t border-blue-800 shadow-xl flex flex-col px-4 py-4 gap-4 text-sm font-medium animate-fade-in z-50">
           <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-orange transition-colors w-full text-left">Home</Link>
