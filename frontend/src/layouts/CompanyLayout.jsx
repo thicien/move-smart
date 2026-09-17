@@ -56,7 +56,6 @@ const CompanyLayout = () => {
           </button>
         </div>
 
-        {/* Company Info */}
         <div className="p-6 border-b border-slate-800 flex items-center gap-4 shrink-0">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-bold text-xl border border-slate-600 shadow-inner">
             {user?.name?.charAt(0) || 'C'}
