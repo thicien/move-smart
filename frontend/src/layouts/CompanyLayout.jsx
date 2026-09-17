@@ -31,11 +31,7 @@ const CompanyLayout = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-800">
-      {SidebarClose && (
-        <SidebarClose onClick={() => }
-      )
-        
-      }
+  
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-20 xl:hidden"
