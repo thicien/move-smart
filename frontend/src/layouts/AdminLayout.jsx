@@ -111,7 +111,6 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-100">
         
         {/* Top Header */}
