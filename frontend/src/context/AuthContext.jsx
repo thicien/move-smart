@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }) => {
     
     if (storedUser && token) {
       setUser(JSON.parse(storedUser));
-      // Set default header for axios
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
     setLoading(false);
