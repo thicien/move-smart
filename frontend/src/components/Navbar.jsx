@@ -15,7 +15,6 @@ const Navbar = () => {
           <span className="text-xl font-bold tracking-tight">MoveSmart</span>
         </Link>
         
-        {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6 text-sm font-medium">
           <Link to="/" className="hover:text-brand-orange transition-colors">Home</Link>
           <a href="#destinations" className="hover:text-brand-orange transition-colors">Destinations</a>
