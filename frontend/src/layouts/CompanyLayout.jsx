@@ -1,7 +1,8 @@
 import { useContext, useState } from 'react';
 import { 
   Bus, LayoutDashboard, Route as RouteIcon, Users, 
-  Settings, LogOut, Menu, X, Search, Bell, Map, PieChart, Ticket
+  Settings, LogOut, Menu, X, Search, Bell, Map, PieChart, Ticket,
+  SidebarClose
 } from 'lucide-react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -30,7 +31,11 @@ const CompanyLayout = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-800">
-      
+      {SidebarClose && (
+        <SidebarClose onClick={() => }
+      )
+        
+      }
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-20 xl:hidden"
