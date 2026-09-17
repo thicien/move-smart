@@ -44,7 +44,6 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
         <button 
           className="md:hidden p-2 text-white hover:text-brand-orange transition-colors"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
