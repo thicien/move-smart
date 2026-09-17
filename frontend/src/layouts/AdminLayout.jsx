@@ -61,7 +61,6 @@ const AdminLayout = () => {
           </button>
         </div>
 
-        {/* User Info */}
         <div className="p-6 border-b border-slate-700 flex items-center gap-4 shrink-0 bg-slate-900/50">
           <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400 font-bold text-xl border border-slate-600">
             {user?.name?.charAt(0) || 'G'}
