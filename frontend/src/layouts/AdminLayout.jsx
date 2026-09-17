@@ -70,7 +70,7 @@ const AdminLayout = () => {
             <p className="text-xs text-emerald-500 font-medium truncate uppercase tracking-wider">System Admin</p>
           </div>
         </div>
-        
+
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
           <p className="px-3 text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Core Systems</p>
           {navLinks.map((link, index) => (
@@ -100,7 +100,6 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        {/* Logout */}
         <div className="p-4 border-t border-slate-700 shrink-0 bg-slate-950">
           <button 
             onClick={handleLogout}
