@@ -38,12 +38,10 @@ const CompanyLayout = () => {
         />
       )}
 
-      {/* Sidebar - Using slate-900 as per requirements */}
       <aside 
         className={`fixed xl:static inset-y-0 left-0 w-72 bg-slate-900 text-slate-300 shadow-2xl transform transition-transform duration-300 ease-in-out z-30 flex flex-col 
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'}`}
       >
-        {/* Logo Area */}
         <div className="h-16 flex items-center px-6 bg-slate-950 shrink-0 border-b border-slate-800">
           <Link to="/" className="flex items-center gap-2">
             <Bus className="h-6 w-6 text-orange-500" />
