@@ -11,7 +11,6 @@ const CompanyLayout = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const handleLogout = () => {
     logout();
     navigate('/login');
