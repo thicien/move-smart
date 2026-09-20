@@ -36,7 +36,6 @@ const CompanyLayout = () => {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-
       <aside 
         className={`fixed xl:static inset-y-0 left-0 w-72 bg-slate-900 text-slate-300 shadow-2xl transform transition-transform duration-300 ease-in-out z-30 flex flex-col 
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'}`}
