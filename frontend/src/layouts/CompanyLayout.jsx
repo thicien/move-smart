@@ -91,7 +91,6 @@ const CompanyLayout = () => {
           ))}
         </nav>
 
-        {/* Logout Button */}
         <div className="p-4 border-t border-slate-800 shrink-0 bg-slate-900/50">
           <button 
             onClick={handleLogout}
