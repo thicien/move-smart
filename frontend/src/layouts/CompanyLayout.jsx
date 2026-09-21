@@ -64,7 +64,6 @@ const CompanyLayout = () => {
           </div>
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
           <p className="px-3 text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Management</p>
           {navLinks.map((link, index) => (
