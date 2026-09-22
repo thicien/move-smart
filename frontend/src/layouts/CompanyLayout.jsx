@@ -144,7 +144,6 @@ const CompanyLayout = () => {
           <Outlet />
         </main>
       </div>
-
     </div>
   );
 };
