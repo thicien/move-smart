@@ -111,7 +111,6 @@ const CompanyLayout = () => {
             >
               <Menu className="w-6 h-6" />
             </button>
-            
             <div className="hidden lg:flex items-center bg-slate-100 border border-transparent rounded-xl px-3 py-2 w-80 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500/50 focus-within:bg-white transition-all shadow-sm">
               <Search className="text-slate-400 w-4 h-4 mr-2" />
               <input 
