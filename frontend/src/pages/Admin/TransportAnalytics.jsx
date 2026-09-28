@@ -51,7 +51,6 @@ const TransportAnalytics = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Monthly Growth Curve */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
           <div className="flex justify-between items-center mb-6">
              <div>
