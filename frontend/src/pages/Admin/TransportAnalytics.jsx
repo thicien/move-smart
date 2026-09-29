@@ -34,7 +34,6 @@ const PIE_COLORS = ['#3B82F6', '#10B981'];
 const TransportAnalytics = () => {
   return (
     <div className="space-y-6 animate-fade-in font-sans">
-      
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-5 border-b border-slate-200">
         <div>
           <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
