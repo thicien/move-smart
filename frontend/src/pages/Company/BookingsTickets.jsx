@@ -39,8 +39,7 @@ const BookingsTickets = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header & Controls */}
+    <div className="space-y-6 animate-fade-in">o
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-gray-200 pb-5">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Bookings & Tickets</h2>
