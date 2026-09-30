@@ -38,7 +38,6 @@ const DriversManagement = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {MOCK_DRIVERS.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase())).map((driver) => (
           <div key={driver.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center relative hover:shadow-md transition-shadow group">
-             {/* Status Badge */}
              <div className="absolute top-4 right-4">
                {driver.status === 'Active' ? (
                  <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
