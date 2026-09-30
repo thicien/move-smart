@@ -177,7 +177,7 @@ const CompanyDashboardHome = () => {
             </ResponsiveContainer>
           </div>
         </div>
-        
+
         <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -190,10 +190,8 @@ const CompanyDashboardHome = () => {
           </div>
           
           <div className="flex-1 bg-slate-100 rounded-xl relative overflow-hidden min-h-[300px] border border-slate-200">
-             {/* Fake Map Background */}
              <div className="absolute inset-0 opacity-20 bg-[url('https://maps.wikimedia.org/osm-intl/12/2402/1534.png')] bg-cover bg-center"></div>
              
-             {/* Map Pins */}
              <div className="absolute top-1/4 left-1/3 text-green-600 animate-bounce">
                <MapPin className="w-6 h-6 fill-white" />
              </div>
