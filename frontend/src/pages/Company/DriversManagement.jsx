@@ -49,7 +49,6 @@ const DriversManagement = () => {
                  </span>
                )}
              </div>
-
              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 mt-2">
                <Users className="w-8 h-8 text-slate-400" />
              </div>
