@@ -55,7 +55,6 @@ const BookingsTickets = () => {
         </div>
       </div>
 
-      {/* Filters Area */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
