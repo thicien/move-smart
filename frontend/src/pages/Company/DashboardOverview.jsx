@@ -105,7 +105,6 @@ const CompanyDashboardHome = () => {
         </div>
       </div>
 
-      {/* Secondary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
