@@ -202,7 +202,6 @@ const CompanyDashboardHome = () => {
                <MapPin className="w-6 h-6 fill-white" />
              </div>
 
-             {/* Map Overlay info */}
              <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-white">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-bold text-slate-800">Bus RAD 424 A</span>
