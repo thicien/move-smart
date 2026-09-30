@@ -64,7 +64,6 @@ const CompanyDashboardHome = () => {
         </div>
       </div>
 
-      {/* Hero Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
