@@ -217,9 +217,7 @@ const CompanyDashboardHome = () => {
              </div>
           </div>
         </div>
-
       </div>
-
     </div>
   );
 };
