@@ -177,8 +177,7 @@ const CompanyDashboardHome = () => {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* Map Preview Column */}
+        
         <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <div>
