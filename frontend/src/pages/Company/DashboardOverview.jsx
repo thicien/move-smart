@@ -50,7 +50,6 @@ const CompanyDashboardHome = () => {
   return (
     <div className="space-y-6">
       
-      {/* Top Banner & Quick Actions */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-gray-200 pb-5">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Operational Overview</h2>
