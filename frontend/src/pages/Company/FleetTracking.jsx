@@ -79,11 +79,7 @@ const FleetTracking = () => {
             </div>
           </div>
           <div className="absolute inset-0 bg-[url('https://maps.wikimedia.org/osm-intl/11/1201/1032.png')] bg-cover bg-center opacity-60 mix-blend-multiply cursor-crosshair"></div>
-          
-          {/* Map Grid overlay for technical look */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.2)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.2)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
-
-          {/* Plotting Buses */}
           {MOCK_FLEET.filter(b => b.id.toLowerCase().includes(searchTerm.toLowerCase()) || b.route.toLowerCase().includes(searchTerm.toLowerCase())).map((bus) => (
             <div 
               key={bus.id} 
