@@ -41,8 +41,6 @@ const FleetTracking = () => {
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4 animate-fade-in relative z-0">
-      
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 shrink-0 border-b border-gray-200 pb-2">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Live Fleet Tracking</h2>
