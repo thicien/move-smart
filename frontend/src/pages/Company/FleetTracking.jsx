@@ -55,7 +55,6 @@ const FleetTracking = () => {
 
       <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
         <div className="flex-1 bg-slate-100 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col">
-          {/* Map Controls */}
           <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-start pointer-events-none">
             <div className="bg-white/90 backdrop-blur-md p-2 rounded-xl shadow-lg border border-white flex gap-2 pointer-events-auto">
               <div className="relative">
