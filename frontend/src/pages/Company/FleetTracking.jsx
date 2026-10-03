@@ -77,6 +77,7 @@ const FleetTracking = () => {
               <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></span> Slight Delay (3)</div>
               <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-500 shadow-sm shadow-red-500/50"></span> Major Delay (1)</div>
             </div>
+            
           </div>
           <div className="absolute inset-0 bg-[url('https://maps.wikimedia.org/osm-intl/11/1201/1032.png')] bg-cover bg-center opacity-60 mix-blend-multiply cursor-crosshair"></div>
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.2)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.2)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
