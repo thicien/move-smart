@@ -89,7 +89,6 @@ const FleetTracking = () => {
               onClick={() => setSelectedBus(bus)}
             >
               <div className="relative">
-                 {/* Ping animation backing */}
                  <div className={`absolute inset-0 rounded-full animate-ping opacity-75 ${getStatusColor(bus.status).split(' ')[0]}`}></div>
                  
                  {/* Pin graphic */}
