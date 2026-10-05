@@ -90,8 +90,6 @@ const FleetTracking = () => {
             >
               <div className="relative">
                  <div className={`absolute inset-0 rounded-full animate-ping opacity-75 ${getStatusColor(bus.status).split(' ')[0]}`}></div>
-                 
-                 {/* Pin graphic */}
                  <div className={`relative flex flex-col items-center group`}>
                    <div className={`w-8 h-8 rounded-full border-2 border-white flex items-center justify-center shadow-lg ${getStatusColor(bus.status).split(' ')[0]}`}>
                      <Navigation className="w-4 h-4 text-white transform rotate-45" />
