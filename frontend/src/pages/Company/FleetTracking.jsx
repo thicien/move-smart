@@ -95,7 +95,6 @@ const FleetTracking = () => {
                      <Navigation className="w-4 h-4 text-white transform rotate-45" />
                    </div>
                    
-                   {/* Tooltip */}
                    <div className={`absolute top-full mt-1 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ${selectedBus.id === bus.id ? 'opacity-100' : ''}`}>
                      {bus.id}
                    </div>
