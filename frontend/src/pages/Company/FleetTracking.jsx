@@ -104,8 +104,7 @@ const FleetTracking = () => {
           ))}
 
         </div>
-
-        {/* Selected Bus Telemetry Panel */}
+      
         <div className="w-full lg:w-96 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col shrink-0 overflow-y-auto">
           <div className={`p-6 border-b border-slate-100 text-white relative overflow-hidden ${getStatusColor(selectedBus.status).split(' ')[0]}`}>
              <div className="absolute top-0 right-0 opacity-20 transform translate-x-1/4 -translate-y-1/4">
